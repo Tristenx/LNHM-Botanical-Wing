@@ -1,7 +1,7 @@
 """Example file to test the workflow"""
 
 
-def dummy_function():
+def dummy_function2():
     """Fake function to test pylint """
 
     return True

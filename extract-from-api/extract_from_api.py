@@ -1,18 +1,20 @@
-"""Python script for basic API extraction. """
+"""Python script for basic API extraction with a moving plant_id window."""
 from datetime import datetime
 import csv
 import requests
 
-
 API_URL = "https://sigma-labs-bot.herokuapp.com/api/plants/"
-PLANT_COUNT = 50
-OUTPUT_FILE = f"plants-raw-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}.csv"
+TARGET_COUNT = 50          # aim for roughly 50 valid plants
+START_ID     = 1           # where each run begins scanning
+MAX_ATTEMPTS = 85         # safety upper bound to avoid infinite loop
+OUTPUT_FILE  = f"plants-raw-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}.csv"
+
 
 def safe_get(d, key):
     return d.get(key) if isinstance(d, dict) else None
 
+
 def flatten_plant(data: dict) -> dict:
-    """Return a flat dict of the fields we want."""
     origin   = safe_get(data, "origin_location") or {}
     botanist = safe_get(data, "botanist") or {}
 
@@ -36,42 +38,43 @@ def flatten_plant(data: dict) -> dict:
         ),
     }
 
+
 def extract_plants():
     rows = []
+    pid = START_ID
+    attempts = 0
 
-    for pid in range(1, PLANT_COUNT + 1):
+    while len(rows) < TARGET_COUNT and attempts < MAX_ATTEMPTS:
         url = f"{API_URL}{pid}"
         try:
             r = requests.get(url, timeout=10)
             r.raise_for_status()
             data = r.json()
 
-            # skip if API responds with an error message
             if "error" in data:
                 print(f"[SKIP] Plant {pid}: {data['error']}")
-                continue
-
-            # ensure plant_id present for consistency
-            data.setdefault("plant_id", pid)
-            rows.append(flatten_plant(data))
-            print(f"[OK]   Plant {pid}")
-
+            else:
+                data.setdefault("plant_id", pid)
+                rows.append(flatten_plant(data))
+                print(f"[OK]   Plant {pid}")
         except requests.RequestException as e:
-            # true network/HTTP failures -> skip
             print(f"[SKIP] Plant {pid}: {e}")
+
+        pid += 1
+        attempts += 1
 
     if not rows:
         print("[WARN] No valid plant data retrieved.")
         return
 
-    # write collected rows to CSV
     with open(OUTPUT_FILE, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=rows[0].keys())
         writer.writeheader()
         writer.writerows(rows)
 
-    print(f"[DONE] {len(rows)} plant records saved to {OUTPUT_FILE}")
+    print(f"[DONE] {len(rows)} plant records saved to {OUTPUT_FILE} "
+          f"(scanned up to plant_id {pid-1})")
+
 
 if __name__ == "__main__":
     extract_plants()
-

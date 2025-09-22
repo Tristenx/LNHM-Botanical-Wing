@@ -7,7 +7,5 @@ def dummy_function():
     return True
 
 
-BAD_CODE = BAD_CODE
-
 if __name__ == "__main__":
     pass

@@ -23,7 +23,7 @@ def query_database(conn, sql: str) -> list[list]:
     return result
 
 
-def get_data(conn) -> dict:
+def get_data(conn) -> dict[list]:
     """Returns all the data from the database in a dictionary."""
     data = dict()
     data["country"] = query_database(conn, "SELECT * FROM alpha.country;")

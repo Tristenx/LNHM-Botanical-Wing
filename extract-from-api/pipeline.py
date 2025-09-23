@@ -10,4 +10,4 @@ if __name__ == "__main__":
     extract()
     transform()
     load()
-    print("[PIPELINE] Extract + Transform complete.")
+    print("[PIPELINE] Extract + Transform + Load complete.")

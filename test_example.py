@@ -1,6 +1,6 @@
-from example import add_numbers
+import example
 
 
 def test_add_numbers():
-    assert add_numbers(1, 2) == 3
-    assert add_numbers(5, 10) == 15
+    assert example.add_numbers(1, 2) == 3
+    assert example.add_numbers(5, 10) == 15

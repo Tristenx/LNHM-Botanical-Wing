@@ -15,6 +15,16 @@ def get_connection():
     return conn
 
 
+def query_database(conn, sql: str):
+    """Returns the result of a query to the database."""
+    with conn.cursor() as cursor:
+        cursor.execute(sql)
+        result = cursor.fetchall()
+    return result
+
+
 if __name__ == "__main__":
     load_dotenv()
     db_conn = get_connection()
+    query = "SELECT name FROM sys.databases;"
+    print(query_database(db_conn, query))

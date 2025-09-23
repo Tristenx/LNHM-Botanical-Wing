@@ -3,29 +3,29 @@
 from os import environ
 
 from dotenv import load_dotenv
-from pyodbc import connect, Connection
+import pyodbc
 
 
-def get_connection() -> Connection:
+def get_connection() -> pyodbc.Connection:
     """Returns a connection to the database."""
 
     conn_str = (f"DRIVER={{{environ['DB_DRIVER']}}};SERVER={environ['DB_HOST']};"
                 f"PORT={environ['DB_PORT']};DATABASE={environ['DB_NAME']};"
                 f"UID={environ['DB_USERNAME']};PWD={environ['DB_PASSWORD']};Encrypt=no;")
-    conn = connect(conn_str)
-    return conn
+    return pyodbc.connect(conn_str)
 
 
-def clear_database(conn: Connection) -> None:
+def clear_database(conn: pyodbc.Connection) -> None:
     """Clears all of the rows from the database."""
 
     with conn.cursor() as cur:
-        cur.execute(open("clear.sql", "r").read())
+        with open("clear.sql", "r", encoding="utf-8") as clear_rows:
+            cur.execute(clear_rows.read())
 
-        conn.commit()
+            conn.commit()
 
 
 if __name__ == "__main__":
     load_dotenv()
-    with get_connection() as conn:
-        clear_database(conn)
+    with get_connection() as db_conn:
+        clear_database(db_conn)

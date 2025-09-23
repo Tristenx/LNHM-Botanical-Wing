@@ -1,5 +1,6 @@
 -- Liverpool Natural History Museum Database Schema (SQL Server)
 
+-- Drop any existing table 
 DROP TABLE alpha.recording
 DROP TABLE alpha.plant
 DROP TABLE alpha.coordinate
@@ -7,6 +8,8 @@ DROP TABLE alpha.city
 DROP TABLE alpha.country
 DROP TABLE alpha.botanist
 
+
+-- Botanist table
 CREATE TABLE alpha.botanist (
     botanist_id INT PRIMARY KEY,
     botanist_name VARCHAR(100) NOT NULL,

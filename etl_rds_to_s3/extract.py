@@ -26,5 +26,3 @@ def query_database(conn, sql: str):
 if __name__ == "__main__":
     load_dotenv()
     db_conn = get_connection()
-    query = "SELECT name FROM sys.databases;"
-    print(query_database(db_conn, query))

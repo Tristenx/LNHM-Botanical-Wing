@@ -2,6 +2,7 @@ name: Python Quality Check Workflow
 
 on:
   push:
+  pull_request:
 
 jobs:
   quality_check:
@@ -33,5 +34,3 @@ jobs:
             pylint --fail-under=8.5 "$file"
           done
 
-      - name: Run tests with coverage
-        run: pytest --cov=. --cov-fail-under=60

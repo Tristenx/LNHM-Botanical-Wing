@@ -1,6 +1,5 @@
 -- Liverpool Natural History Museum Database Schema (SQL Server)
 
-
 -- Botanist table
 CREATE TABLE IF NOT EXISTS botanist (
     botanist_id SERIAL PRIMARY KEY,
@@ -36,7 +35,7 @@ CREATE TABLE IF NOT EXISTS coordinate (
 CREATE TABLE IF NOT EXISTS plant (
     plant_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    scientific_name VARCHAR(100) NOT,
+    scientific_name VARCHAR(100),
     country_id INTEGER REFERENCES country(country_id),
     city_id INTEGER REFERENCES city(city_id),
     coordinate_id INTEGER REFERENCES coordinate(coordinate_id)

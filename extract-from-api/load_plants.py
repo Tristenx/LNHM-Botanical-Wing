@@ -1,6 +1,7 @@
+# Updated load_plants.py
 """
-Load transformed CSVs into SQL Server (safe append) using SQLAlchemy + pyodbc.
-Only inserts rows whose primary keys do not already exist.
+Load transformed CSVs into SQL Server using SQLAlchemy + pyodbc.
+Performs an upsert (MERGE) to update existing rows and insert new ones.
 """
 import os
 from pathlib import Path
@@ -45,7 +46,7 @@ COLUMN_MAPS = {
 }
 
 def load():
-    """Load CSVs into SQL Server using SQLAlchemy (safe append)."""
+    """Load CSVs into SQL Server using an upsert (MERGE)."""
     odbc_str = (
         f"DRIVER={{{DB_DRIVER}}};"
         f"SERVER={DB_HOST},{DB_PORT};"
@@ -69,40 +70,47 @@ def load():
                 continue
 
             df = pd.read_csv(file_path)
+            
+            if df.empty:
+                print(f"[LOAD] No data to process for {table}.")
+                continue
 
             # rename columns if needed
             if table in COLUMN_MAPS:
                 df.rename(columns=COLUMN_MAPS[table], inplace=True)
-
-            # fetch existing primary keys to avoid duplicates
-            existing_keys = set()
-            query = text(f"SELECT {pk_col} FROM {DB_SCHEMA}.{table}")
-            for row in conn.execute(query):
-                existing_keys.add(row[0])
-
-            # filter out rows whose primary key already exists
-            if pk_col in df.columns:
-                before = len(df)
-                df = df[~df[pk_col].isin(existing_keys)]
-                skipped = before - len(df)
-                if skipped:
-                    print(f"[LOAD] Skipped {skipped} duplicate rows for {table}.")
-
-            if df.empty:
-                print(f"[LOAD] Nothing new to insert into {DB_SCHEMA}.{table}.")
-                continue
-
-            print(f"[LOAD] Inserting {len(df)} rows into {DB_SCHEMA}.{table}…")
+            
+            # Use a temporary table for the MERGE source
+            temp_table = f"#{table}_temp"
+            print(f"[LOAD] Loading into temporary table {temp_table}…")
             df.to_sql(
-                name=table,
+                name=temp_table,
                 con=conn,
                 schema=DB_SCHEMA,
-                if_exists="append",
+                if_exists="replace",
                 index=False,
                 chunksize=1000,
-                method="multi"
             )
 
+            # Construct the MERGE statement
+            columns = ", ".join([f'"{c}"' for c in df.columns])
+            update_set = ", ".join([f"TARGET.{c} = SOURCE.{c}" for c in df.columns])
+            insert_values = ", ".join([f"SOURCE.{c}" for c in df.columns])
+
+            merge_sql = text(f"""
+                MERGE INTO {DB_SCHEMA}.{table} AS TARGET
+                USING {temp_table} AS SOURCE
+                ON (TARGET.{pk_col} = SOURCE.{pk_col})
+                WHEN MATCHED THEN
+                    UPDATE SET {update_set}
+                WHEN NOT MATCHED THEN
+                    INSERT ({columns})
+                    VALUES ({insert_values});
+            """)
+
+            print(f"[LOAD] Performing upsert for {table}…")
+            result = conn.execute(merge_sql)
+            print(f"[LOAD] Upserted {result.rowcount} rows into {DB_SCHEMA}.{table}.")
+            
         print("[LOAD] All tables loaded successfully.")
 
 if __name__ == "__main__":
@@ -110,4 +118,3 @@ if __name__ == "__main__":
         load()
     except RuntimeError as exc:
         print(f"[ERROR] Load failed: {exc}")
-    

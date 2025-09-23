@@ -1,0 +1,7 @@
+pandas
+pathlib
+requests
+dotenv
+pyodbc
+sqlalchemy
+pytest

@@ -5,7 +5,6 @@ Each run overwrites these outputs:
     data/transformed/
         country.csv
         city.csv
-        coordinate.csv
         plant.csv
         recording.csv
         botanist.csv
@@ -136,14 +135,6 @@ def transform() -> None:
     )
     city["city_id"] = city.index + 1
 
-    coordinate = (
-        df[["latitude", "longitude"]]
-        .dropna()
-        .drop_duplicates()
-        .reset_index(drop=True)
-    )
-    coordinate["coordinate_id"] = coordinate.index + 1
-
     botanist = (
         df[["botanist_name", "botanist_email", "botanist_phone"]]
         .dropna(how="all")
@@ -164,19 +155,20 @@ def transform() -> None:
     df = (
         df.merge(country, left_on="origin_country", right_on="name", how="left")
         .merge(city, left_on="origin_city", right_on="name", how="left", suffixes=("", "_city"))
-        .merge(coordinate, on=["latitude", "longitude"], how="left")
         .merge(botanist[["botanist_id", "email"]],
                left_on="botanist_email", right_on="email", how="left")
     )
 
+    # Plant table now contains latitude & longitude directly
     plant = df[
         [
             "plant_id",
             "name",
             "scientific_name",
+            "latitude",
+            "longitude",
             "country_id",
             "city_id",
-            "coordinate_id",
         ]
     ]
 
@@ -195,7 +187,6 @@ def transform() -> None:
     # Write output tables
     country.to_csv(OUT_DIR / "country.csv", index=False)
     city.to_csv(OUT_DIR / "city.csv", index=False)
-    coordinate.to_csv(OUT_DIR / "coordinate.csv", index=False)
     plant.to_csv(OUT_DIR / "plant.csv", index=False)
     recording.to_csv(OUT_DIR / "recording.csv", index=False)
     botanist.to_csv(OUT_DIR / "botanist.csv", index=False)

@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import pyodbc
 
 
-def get_connection():
+def get_connection() -> pyodbc.Connection:
     """Returns a connection to the database."""
     conn_str = (f"DRIVER={{{environ['DB_DRIVER']}}};SERVER={environ['DB_HOST']};"
                 f"PORT={environ['DB_PORT']};DATABASE={environ['DB_NAME']};"
@@ -15,7 +15,7 @@ def get_connection():
     return conn
 
 
-def query_database(conn, sql: str) -> list[list]:
+def query_database(conn: pyodbc.Connection, sql: str) -> list[list]:
     """Returns the result of a query to the database."""
     with conn.cursor() as cursor:
         cursor.execute(sql)
@@ -23,7 +23,7 @@ def query_database(conn, sql: str) -> list[list]:
     return result
 
 
-def get_data(conn) -> dict[list]:
+def get_data(conn: pyodbc.Connection) -> dict[list]:
     """Returns all the data from the database in a dictionary."""
     data = dict()
     data["country"] = query_database(conn, "SELECT * FROM alpha.country;")
@@ -38,4 +38,3 @@ if __name__ == "__main__":
     load_dotenv()
     db_conn = get_connection()
     plant_data = get_data(db_conn)
-    print(plant_data)

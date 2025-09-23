@@ -14,8 +14,17 @@ jobs:
       - name: Set up python
         uses: actions/setup-python@v6
 
-      - name: Install dependencies
+      - name: Install top level dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install API ETL requirements.xt
         run: |
+          cd etl_rds_to_s3
+          pip install -r requirements.txt
+
+      - name: Install DB ETL requirements.txt
+        run: |
+          cd extract-from-api
           pip install -r requirements.txt
 
       - name: "Lint"

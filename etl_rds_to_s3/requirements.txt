@@ -2,3 +2,4 @@ pylint
 pytest
 pyodbc
 python-dotenv
+pandas

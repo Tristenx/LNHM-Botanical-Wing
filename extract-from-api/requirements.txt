@@ -1,4 +1,5 @@
 pandas
 pathlib
 requests
-pandas
+dotenv
+pyodbc

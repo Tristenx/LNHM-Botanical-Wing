@@ -29,17 +29,17 @@ def clean_numeric(s):
 def transform():
     df = pd.read_csv(RAW_FILE)
 
-    # Clean strings
+    #  lean strings
     for col in df.select_dtypes("object").columns:
         df[col] = df[col].astype(str).str.strip().replace({"nan": None})
 
-    # Numeric + datetime
+    # numeric + datetime
     for col in ["temperature", "soil_moisture", "latitude", "longitude"]:
         df[col] = clean_numeric(df[col])
     for col in ["last_watered", "recording_taken"]:
         df[col] = pd.to_datetime(df[col], errors="coerce", utc=True)
 
-    # Dimension tables
+    # dimension tables
     country = (
         df[["origin_country"]]
         .dropna()
@@ -74,7 +74,7 @@ def transform():
     botanist["phone_number"] = botanist["phone_number"].apply(normalise_phone)
     botanist["botanist_id"] = botanist.index + 1
 
-    # Join to map foreign keys
+    # join to map foreign keys
     df = (
         df.merge(country, left_on="origin_country", right_on="name", how="left")
           .merge(city, left_on="origin_city", right_on="name", how="left", suffixes=("", "_city"))
@@ -82,7 +82,7 @@ def transform():
                  left_on="botanist_email", right_on="email", how="left")
     )
 
-    # Plant table includes latitude/longitude directly
+    # plant table includes latitude/longitude directly
     plant = df[
         [
             "plant_id",
@@ -107,7 +107,7 @@ def transform():
     ].copy()
     recording["recording_id"] = recording.index + 1
 
-    # Save outputs
+    # save outputs
     country.to_csv(OUT_DIR / "country.csv", index=False)
     city.to_csv(OUT_DIR / "city.csv", index=False)
     plant.to_csv(OUT_DIR / "plant.csv", index=False)

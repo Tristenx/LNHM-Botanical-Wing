@@ -31,9 +31,11 @@ def get_data(conn) -> dict[list]:
     data["plant"] = query_database(conn, "SELECT * FROM alpha.plant;")
     data["recording"] = query_database(conn, "SELECT * FROM alpha.recording;")
     data["botanist"] = query_database(conn, "SELECT * FROM alpha.botanist;")
+    return data
 
 
 if __name__ == "__main__":
     load_dotenv()
     db_conn = get_connection()
     plant_data = get_data(db_conn)
+    print(plant_data)

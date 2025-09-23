@@ -15,12 +15,37 @@ def get_connection():
     return conn
 
 
-def query_database(conn, sql: str):
+def query_database(conn, sql: str) -> list[list]:
     """Returns the result of a query to the database."""
     with conn.cursor() as cursor:
         cursor.execute(sql)
         result = cursor.fetchall()
     return result
+
+
+def get_country_data(conn) -> list[list]:
+    """Returns all the rows from the country table."""
+    query = ""
+
+
+def get_city_data(conn) -> list[list]:
+    """Returns all the rows from the city table."""
+    query = ""
+
+
+def get_plant_data(conn) -> list[list]:
+    """Returns all the rows from the plant table."""
+    query = ""
+
+
+def get_recording_data(conn) -> list[list]:
+    """Returns all the rows from the recording table."""
+    query = ""
+
+
+def get_botanist_data(conn) -> list[list]:
+    """Returns all the rows from the botanist table."""
+    query = ""
 
 
 if __name__ == "__main__":

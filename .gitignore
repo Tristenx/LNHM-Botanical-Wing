@@ -1,4 +1,4 @@
 .venv
 .pytest_cache 
 .coverage
-quality-check.yml
+test-cov.yml

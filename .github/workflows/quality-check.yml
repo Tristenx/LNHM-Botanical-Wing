@@ -1,0 +1,25 @@
+name: Python Quality Check Workflow
+
+on:
+  push:
+
+jobs:
+  quality_check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Get the repository code"
+        uses: actions/checkout@v5
+
+      - name: Set up python
+        uses: actions/setup-python@v6
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: "Lint"
+        run: |
+          for file in $(git ls-files '*.py'); do
+            pylint --fail-under=8.5 "$file"
+          done

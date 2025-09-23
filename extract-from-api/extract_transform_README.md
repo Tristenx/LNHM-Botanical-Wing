@@ -35,7 +35,7 @@ data/
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
 ### 1. Prerequisites
 - Python **3.9+**

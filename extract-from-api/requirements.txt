@@ -3,3 +3,4 @@ pathlib
 requests
 dotenv
 pyodbc
+sqlalchemy

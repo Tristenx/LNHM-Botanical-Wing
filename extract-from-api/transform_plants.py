@@ -111,8 +111,8 @@ def transform():
     country.to_csv(OUT_DIR / "country.csv", index=False)
     city.to_csv(OUT_DIR / "city.csv", index=False)
     plant.to_csv(OUT_DIR / "plant.csv", index=False)
-    recording.to_csv(OUT_DIR / "recording.csv", index=False)
     botanist.to_csv(OUT_DIR / "botanist.csv", index=False)
+    recording.to_csv(OUT_DIR / "recording.csv", index=False)
 
     print(f"[DONE] Transform complete → {OUT_DIR}")
 

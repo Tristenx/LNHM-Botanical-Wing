@@ -25,27 +25,27 @@ def query_database(conn, sql: str) -> list[list]:
 
 def get_country_data(conn) -> list[list]:
     """Returns all the rows from the country table."""
-    query = ""
+    query = "SELECT * FROM alpha.country;"
 
 
 def get_city_data(conn) -> list[list]:
     """Returns all the rows from the city table."""
-    query = ""
+    query = "SELECT * FROM alpha.city;"
 
 
 def get_plant_data(conn) -> list[list]:
     """Returns all the rows from the plant table."""
-    query = ""
+    query = "SELECT * FROM alpha.plant;"
 
 
 def get_recording_data(conn) -> list[list]:
     """Returns all the rows from the recording table."""
-    query = ""
+    query = "SELECT * FROM alpha.recording;"
 
 
 def get_botanist_data(conn) -> list[list]:
     """Returns all the rows from the botanist table."""
-    query = ""
+    query = "SELECT * FROM alpha.botanist;"
 
 
 if __name__ == "__main__":

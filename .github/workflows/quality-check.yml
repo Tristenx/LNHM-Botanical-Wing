@@ -11,12 +11,12 @@ jobs:
     - name: "Get the repository code"
       uses: actions/checkout@v5
     
-    - name: "Install Python"
+    - name: Set up python
       uses: actions/setup-python@v6
     
-    - name: "Install packages"
+    - name: Install dependencies
       run: | 
-        pip install -r requirements.txt
+        pip install pylint
 
     - name: "Lint"
       run: |

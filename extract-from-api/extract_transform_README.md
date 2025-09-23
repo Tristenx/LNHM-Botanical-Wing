@@ -9,7 +9,8 @@ The pipeline:
 1. **Extracts** up to **50 plant records** from the public API.
 2. Writes a single raw CSV (`data/plants-raw.csv`).
 3. **Transforms** the raw data into a set of **normalised tables** inside `data/transformed/`.
-4. Overwrites all output files on every run for easy scheduling (e.g., Docker + cron).
+4. **Loads** the normalised tables into a SQL Server
+5. Overwrites all output files on every run for easy scheduling (e.g., Docker + cron).
 
 ---
 

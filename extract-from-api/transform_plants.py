@@ -3,8 +3,9 @@ Transform plants-raw.csv → normalised tables in data/transformed/.
 """
 
 from pathlib import Path
-import pandas as pd
 import re
+import pandas as pd
+
 
 DATA_DIR = Path("data")
 RAW_FILE = DATA_DIR / "plants-raw.csv"
@@ -14,6 +15,7 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def normalise_phone(phone: str) -> str:
+    """Normalises phone number by stripping +, , - and replacing 'ext' if applicable with x"""
     if not isinstance(phone, str):
         return None
     phone = phone.lower().replace("ext", "x")
@@ -23,10 +25,12 @@ def normalise_phone(phone: str) -> str:
 
 
 def clean_numeric(s):
+    """Cleans and forces numeric on numeric columns."""
     return pd.to_numeric(s, errors="coerce")
 
 
 def transform():
+    """Handles all transformation logic for the raw plants data .csv file. """
     df = pd.read_csv(RAW_FILE)
 
     #  lean strings

@@ -5,8 +5,8 @@ Uses multiprocessing to speed up API calls.
 
 from pathlib import Path
 import csv
-import requests
 import multiprocessing as mp
+import requests
 
 API_URL = "https://sigma-labs-bot.herokuapp.com/api/plants/"
 TARGET_COUNT = 50
@@ -19,12 +19,14 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def safe_get(d: dict, k: str):
+    """Returns dictionary key if d is a dict - else returns None."""
     return d.get(k) if isinstance(d, dict) else None
 
 
 def flatten_plant(d: dict) -> dict:
-    o = safe_get(d, "origin_location") or {}
-    b = safe_get(d, "botanist") or {}
+    """Flattens output for SQL Server upload. """
+    origin = safe_get(d, "origin_location") or {}
+    botanist = safe_get(d, "botanist") or {}
     sci = d.get("scientific_name")
     return {
         "plant_id": d.get("plant_id"),
@@ -34,17 +36,18 @@ def flatten_plant(d: dict) -> dict:
         "soil_moisture": d.get("soil_moisture"),
         "last_watered": d.get("last_watered"),
         "recording_taken": d.get("recording_taken"),
-        "latitude": o.get("latitude"),
-        "longitude": o.get("longitude"),
-        "origin_city": o.get("city"),
-        "origin_country": o.get("country"),
-        "botanist_name": b.get("name"),
-        "botanist_email": b.get("email"),
-        "botanist_phone": b.get("phone"),
+        "latitude": origin.get("latitude"),
+        "longitude": origin.get("longitude"),
+        "origin_city": origin.get("city"),
+        "origin_country": origin.get("country"),
+        "botanist_name": botanist.get("name"),
+        "botanist_email": botanist.get("email"),
+        "botanist_phone": botanist.get("phone"),
     }
 
 
 def fetch_single(pid: int) -> dict:
+    """Fetches single plant via its id. """
     try:
         r = requests.get(f"{API_URL}{pid}", timeout=10)
         r.raise_for_status()

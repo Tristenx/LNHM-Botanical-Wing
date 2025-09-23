@@ -2,16 +2,15 @@
 Load transformed CSVs into SQL Server (safe append) using SQLAlchemy + pyodbc.
 Only inserts rows whose primary keys do not already exist.
 """
-
-import warnings
-warnings.filterwarnings("ignore", category=UserWarning, module="urllib3")
-
 import os
-import pandas as pd
 from pathlib import Path
+import urllib
+import warnings
+import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
-import urllib
+
+warnings.filterwarnings("ignore", category=UserWarning, module="urllib3")
 
 load_dotenv()
 
@@ -109,5 +108,6 @@ def load():
 if __name__ == "__main__":
     try:
         load()
-    except Exception as exc:
+    except RuntimeError as exc:
         print(f"[ERROR] Load failed: {exc}")
+    

@@ -4,3 +4,4 @@ requests
 dotenv
 pyodbc
 sqlalchemy
+pytest

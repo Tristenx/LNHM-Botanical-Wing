@@ -23,41 +23,17 @@ def query_database(conn, sql: str) -> list[list]:
     return result
 
 
-def get_country_data(conn) -> list[list]:
-    """Returns all the rows from the country table."""
-    query = "SELECT * FROM alpha.country;"
-    data = query_database(conn, query)
-    return data
-
-
-def get_city_data(conn) -> list[list]:
-    """Returns all the rows from the city table."""
-    query = "SELECT * FROM alpha.city;"
-    data = query_database(conn, query)
-    return data
-
-
-def get_plant_data(conn) -> list[list]:
-    """Returns all the rows from the plant table."""
-    query = "SELECT * FROM alpha.plant;"
-    data = query_database(conn, query)
-    return data
-
-
-def get_recording_data(conn) -> list[list]:
-    """Returns all the rows from the recording table."""
-    query = "SELECT * FROM alpha.recording;"
-    data = query_database(conn, query)
-    return data
-
-
-def get_botanist_data(conn) -> list[list]:
-    """Returns all the rows from the botanist table."""
-    query = "SELECT * FROM alpha.botanist;"
-    data = query_database(conn, query)
-    return data
+def get_data(conn) -> dict:
+    """Returns all the data from the database in a dictionary."""
+    data = dict()
+    data["country"] = query_database(conn, "SELECT * FROM alpha.country;")
+    data["city"] = query_database(conn, "SELECT * FROM alpha.city;")
+    data["plant"] = query_database(conn, "SELECT * FROM alpha.plant;")
+    data["recording"] = query_database(conn, "SELECT * FROM alpha.recording;")
+    data["botanist"] = query_database(conn, "SELECT * FROM alpha.botanist;")
 
 
 if __name__ == "__main__":
     load_dotenv()
     db_conn = get_connection()
+    plant_data = get_data(db_conn)

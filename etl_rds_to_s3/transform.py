@@ -78,11 +78,23 @@ def clean_plant_records(records: pd.DataFrame, plant_data: dict[list]) -> dict:
     return summary
 
 
+def get_summary_plant_data(plant_data: dict[list]) -> pd.DataFrame:
+    """Returns a dataframe containing a summary of plant recordings over the last 24hrs."""
+    plant_ids = get_all_plant_ids(plant_tables["plant"])
+
+    summary_data = []
+    for plant_id in plant_ids:
+        plant_records = get_records_for_id(plant_id, plant_data["recording"])
+        if not plant_records.empty:
+            plant_records = clean_plant_records(plant_records, plant_data)
+            summary_data.append(plant_records)
+
+    return pd.DataFrame(summary_data)
+
+
 if __name__ == "__main__":
     load_dotenv()
     db_conn = get_connection()
     plant_tables = get_data(db_conn)
-    plant_ids = get_all_plant_ids(plant_tables["plant"])
-    plant_record = get_records_for_id(
-        plant_ids[4], plant_tables["recording"])
-    print(clean_plant_records(plant_record, plant_tables))
+    plant_summary = get_summary_plant_data(plant_tables)
+    print(plant_summary.head(10))

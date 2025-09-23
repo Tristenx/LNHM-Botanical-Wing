@@ -1,4 +1,4 @@
-""""Clears the rds database"""
+""""Clears the RDS database."""
 
 from os import environ
 

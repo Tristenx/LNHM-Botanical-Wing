@@ -1,0 +1,8 @@
+services:
+  lnmh_pipeline:
+    build: .
+    volumes:
+      - ./.env:/app/.env
+      - ./data:/app/data
+    env_file:
+      - ./.env

@@ -28,13 +28,3 @@ def handler(event=None, context=None) -> dict[str:str]:
     return {
         "message": "Uploaded"
     }
-
-
-if __name__ == "__main__":
-    load_dotenv()
-    db_conn = get_connection()
-    plant_tables = get_data(db_conn)
-    plant_summary = get_summary_plant_data(plant_tables)
-    csv_name = generate_csv(plant_summary)
-    s3_session = get_session()
-    s3_session.upload_file(csv_name, "c19-alpha-s3-bucket", csv_name)

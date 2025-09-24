@@ -28,3 +28,7 @@ def handler(event=None, context=None) -> dict[str:str]:
     return {
         "message": "Uploaded"
     }
+
+
+if __name__ == "__main__":
+    handler()

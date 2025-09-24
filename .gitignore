@@ -1,3 +1,6 @@
 .venv
 .pytest_cache 
 .coverage
+.env
+*.csv
+/data

@@ -1,13 +1,19 @@
 """
+
 Extract plant data from the LNMH API and save as data/plants-raw.csv.
+
 Uses multiprocessing to speed up API calls.
+
 """
 
 from pathlib import Path
+from typing import Optional, Any
 import csv
 import multiprocessing as mp
+import sys
 import requests
 
+# config
 API_URL = "https://sigma-labs-bot.herokuapp.com/api/plants/"
 TARGET_COUNT = 50
 START_ID = 1
@@ -15,27 +21,28 @@ MAX_ATTEMPTS = 85
 DATA_DIR = Path("data")
 RAW_FILE = DATA_DIR / "plants-raw.csv"
 
-DATA_DIR.mkdir(parents=True, exist_ok=True)
+# Custom exception
+class PlantFetchError(Exception):
+    """Custom exception for errors when fetching plant data."""
 
+#API Helper funcs
+def safe_get(dictionary: dict, k: str) -> Optional[Any]:
+    """Returns dictionary key if dictionary is a dict - else returns None."""
+    return dictionary.get(k) if isinstance(dictionary, dict) else None
 
-def safe_get(d: dict, k: str):
-    """Returns dictionary key if d is a dict - else returns None."""
-    return d.get(k) if isinstance(d, dict) else None
-
-
-def flatten_plant(d: dict) -> dict:
-    """Flattens output for SQL Server upload. """
-    origin = safe_get(d, "origin_location") or {}
-    botanist = safe_get(d, "botanist") or {}
-    sci = d.get("scientific_name")
+def flatten_plant(dictionary: dict) -> dict:
+    """Flattens output for SQL Server upload."""
+    origin = dictionary.get("origin_location", {})
+    botanist = dictionary.get("botanist", {})
+    sci = dictionary.get("scientific_name")
     return {
-        "plant_id": d.get("plant_id"),
-        "name": d.get("name"),
+        "plant_id": dictionary.get("plant_id"),
+        "name": dictionary.get("name"),
         "scientific_name": ", ".join(sci) if isinstance(sci, list) else sci,
-        "temperature": d.get("temperature"),
-        "soil_moisture": d.get("soil_moisture"),
-        "last_watered": d.get("last_watered"),
-        "recording_taken": d.get("recording_taken"),
+        "temperature": dictionary.get("temperature"),
+        "soil_moisture": dictionary.get("soil_moisture"),
+        "last_watered": dictionary.get("last_watered"),
+        "recording_taken": dictionary.get("recording_taken"),
         "latitude": origin.get("latitude"),
         "longitude": origin.get("longitude"),
         "origin_city": origin.get("city"),
@@ -45,27 +52,29 @@ def flatten_plant(d: dict) -> dict:
         "botanist_phone": botanist.get("phone"),
     }
 
-
-def fetch_single(pid: int) -> dict:
-    """Fetches single plant via its id. """
+def fetch_single(pid: int) -> Optional[dict]:
+    """Fetches single plant via its id, returns None on error."""
     try:
-        r = requests.get(f"{API_URL}{pid}", timeout=10)
-        r.raise_for_status()
-        data = r.json()
-        if "error" not in data:
-            data.setdefault("plant_id", pid)
-            return flatten_plant(data)
-    except Exception:
+        response = requests.get(f"{API_URL}{pid}", timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        if "error" in data:
+            print(f"[{pid}] API error: {data['error']}", file=sys.stderr)
+            return None
+        data.setdefault("plant_id", pid)
+        return flatten_plant(data)
+    except (requests.exceptions.RequestException, ValueError) as e:
+        print(f"[{pid}] Request error: {e}", file=sys.stderr)
         return None
-    return None
 
-
+# main logic
 def extract():
     """Fetch plant records in parallel and write plants-raw.csv."""
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
     ids = list(range(START_ID, START_ID + MAX_ATTEMPTS))
     rows = []
 
-    with mp.Pool(processes=8) as pool:
+    with mp.Pool(processes=mp.cpu_count()) as pool:
         for result in pool.imap_unordered(fetch_single, ids):
             if result:
                 rows.append(result)
@@ -82,6 +91,6 @@ def extract():
 
     print(f"[DONE] Extracted {len(rows)} → {RAW_FILE}")
 
-
+#entry point
 if __name__ == "__main__":
     extract()

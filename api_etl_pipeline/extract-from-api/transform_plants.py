@@ -33,7 +33,7 @@ def transform():
     """Handles all transformation logic for the raw plants data .csv file. """
     df = pd.read_csv(RAW_FILE)
 
-    #  lean strings
+    #  clean strings
     for col in df.select_dtypes("object").columns:
         df[col] = df[col].astype(str).str.strip().replace({"nan": None})
 
@@ -42,6 +42,9 @@ def transform():
         df[col] = clean_numeric(df[col])
     for col in ["last_watered", "recording_taken"]:
         df[col] = pd.to_datetime(df[col], errors="coerce", utc=True)
+    
+    # Filter for valid values.
+    df = df[(df["temperature"] >= 0) & (df["soil_moisture"].between(0, 100))]
 
     # dimension tables
     country = (

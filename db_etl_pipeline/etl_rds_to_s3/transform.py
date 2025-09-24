@@ -27,13 +27,13 @@ def get_records_for_id(plant_id: int, recordings: list) -> pd.DataFrame:
     for recording in recordings:
         if recording[0] == plant_id:
             record = dict()
-            record["recording_id"] = recording[0]
-            record["plant_id"] = recording[1]
-            record["botanist_id"] = recording[2]
-            record["temperature"] = recording[3]
-            record["last_watered"] = recording[4]
-            record["soil_moisture"] = recording[5]
-            record["recording_taken"] = recording[6]
+            record["recording_id"] = recording[6]
+            record["plant_id"] = recording[0]
+            record["botanist_id"] = recording[1]
+            record["temperature"] = recording[2]
+            record["last_watered"] = recording[3]
+            record["soil_moisture"] = recording[4]
+            record["recording_taken"] = recording[5]
             records.append(record)
     return pd.DataFrame(records)
 
@@ -80,7 +80,7 @@ def clean_plant_records(records: pd.DataFrame, plant_data: dict[list]) -> dict:
 
 def get_summary_plant_data(plant_data: dict[list]) -> pd.DataFrame:
     """Returns a dataframe containing a summary of plant recordings over the last 24hrs."""
-    plant_ids = get_all_plant_ids(plant_tables["plant"])
+    plant_ids = get_all_plant_ids(plant_data["plant"])
 
     summary_data = []
     for plant_id in plant_ids:
@@ -92,10 +92,11 @@ def get_summary_plant_data(plant_data: dict[list]) -> pd.DataFrame:
     return pd.DataFrame(summary_data)
 
 
-def generate_csv(summary: pd.DataFrame) -> None:
+def generate_csv(summary: pd.DataFrame) -> str:
     """Produces a a summary csv for the last 24hrs of data."""
-    summary_date = summary["date"].iloc()[0]
-    summary.to_csv(path_or_buf=f"{summary_date}-summary.csv")
+    file_name = f"{summary["date"].iloc()[0]}-summary.csv"
+    summary.to_csv(path_or_buf=file_name)
+    return file_name
 
 
 if __name__ == "__main__":
@@ -103,4 +104,4 @@ if __name__ == "__main__":
     db_conn = get_connection()
     plant_tables = get_data(db_conn)
     plant_summary = get_summary_plant_data(plant_tables)
-    generate_csv(plant_summary)
+    csv_name = generate_csv(plant_summary)

@@ -1,0 +1,27 @@
+"""Script that loads the summary csv file into the S3 bucket."""
+
+from os import environ
+
+import boto3
+from dotenv import load_dotenv
+
+from extract import get_connection, get_data
+from transform import get_summary_plant_data, generate_csv
+
+
+def get_session() -> boto3.session.Session:
+    """Returns a boto3 session for upload."""
+    current_session = boto3.session.Session(
+        aws_access_key_id=environ["ACCESS_KEY"],
+        aws_secret_access_key=environ["SECRET_ACCESS_KEY"]).client("s3")
+    return current_session
+
+
+if __name__ == "__main__":
+    load_dotenv()
+    db_conn = get_connection()
+    plant_tables = get_data(db_conn)
+    plant_summary = get_summary_plant_data(plant_tables)
+    csv_name = generate_csv(plant_summary)
+    s3_session = get_session()
+    s3_session.upload_file(csv_name, "c19-alpha-s3-bucket", csv_name)

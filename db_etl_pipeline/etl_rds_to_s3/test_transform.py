@@ -19,7 +19,6 @@ def test_get_all_plant_ids_return_list_of_ints():
 
     res = get_all_plant_ids([[25, "Laronburgh", None], [1, "Stammside", None], [
                             24, "Adamshaven", "Ficus carica"]])
-    # assert isinstance(res, list[int])
     for id in res:
         assert isinstance(id, int)
 
@@ -41,11 +40,31 @@ def test_get_all_plant_ids_remove_duplicate_ids():
 
 # Tests for the get_id_map function
 
+def test_get_id_map_return_dict():
+    """Checks whether the function returns a dictionary"""
+
+    res = get_id_map({"plant": [[25, "Laronburgh", None], [1, "Stammside", None], [
+        24, "Adamshaven", "Ficus carica"]]}, "plant")
+
+    assert isinstance(res, dict)
+
+
+def test_get_id_map_valid_return():
+    """Checks whether the function returns a dictionary"""
+
+    res = get_id_map({"plant": [[25, "Laronburgh", None], [1, "Stammside", None], [
+        24, "Adamshaven", "Ficus carica"]]}, "plant")
+
+    expected_dict = {25: "Laronburgh",
+                     1: "Stammside", 24: "Adamshaven"}
+
+    assert res == expected_dict
+
 
 # Tests for the get_records_for_id function
 
-# helper function
 def get_df_columns(records_df: pd.DataFrame) -> list[str]:
+    """Helper function which extracts the columns from the pandas df"""
     return records_df.columns.to_list()
 
 

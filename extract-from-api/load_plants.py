@@ -1,76 +1,115 @@
-# load_plants.py
 """
-Load transformed CSVs into SQL Server (append-only).
+Load transformed CSVs into SQL Server (safe append) using SQLAlchemy + pyodbc.
+Only inserts rows whose primary keys do not already exist.
 """
-
-from pathlib import Path
-import pandas as pd
-import pyodbc
-from dotenv import load_dotenv
 import os
+from pathlib import Path
+import urllib
+import warnings
+import pandas as pd
+from dotenv import load_dotenv
+from sqlalchemy import create_engine, text
 
-# Load .env
+warnings.filterwarnings("ignore", category=UserWarning, module="urllib3")
+
 load_dotenv()
 
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT", "1433")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_NAME = os.getenv("DB_NAME")
+DB_HOST   = os.getenv("DB_HOST")
+DB_PORT   = os.getenv("DB_PORT", "1433")
+DB_USER   = os.getenv("DB_USER")
+DB_PASS   = os.getenv("DB_PASSWORD")
+DB_NAME   = os.getenv("DB_NAME")
 DB_SCHEMA = os.getenv("DB_SCHEMA", "alpha")
 DB_DRIVER = os.getenv("DB_DRIVER", "ODBC Driver 18 for SQL Server")
 
 DATA_DIR = Path("data/transformed")
 
-def get_conn():
-    conn_str = (
+# CSV → Table mappings
+TABLES = [
+    ("country.csv",   "country",   "country_id"),
+    ("city.csv",      "city",      "city_id"),
+    ("botanist.csv",  "botanist",  "botanist_id"),
+    ("plant.csv",     "plant",     "plant_id"),
+    ("recording.csv", "recording", "id"),  # id will autoincrement
+]
+
+# CSV column → DB column renames
+COLUMN_MAPS = {
+    "botanist": {
+        "name": "botanist_name",
+        "phone_number": "phone"
+    },
+    "recording": {
+        "recording_id": "id"
+    }
+}
+
+def load():
+    """Load CSVs into SQL Server using SQLAlchemy (safe append)."""
+    odbc_str = (
         f"DRIVER={{{DB_DRIVER}}};"
         f"SERVER={DB_HOST},{DB_PORT};"
         f"DATABASE={DB_NAME};"
         f"UID={DB_USER};"
-        f"PWD={DB_PASSWORD};"
-        "TrustServerCertificate=yes;"
+        f"PWD={DB_PASS};"
+        "Encrypt=yes;TrustServerCertificate=yes;Connection Timeout=30;"
     )
-    return pyodbc.connect(conn_str)
+    engine = create_engine(
+        f"mssql+pyodbc:///?odbc_connect={urllib.parse.quote_plus(odbc_str)}",
+        fast_executemany=True
+    )
 
-def load_table(df: pd.DataFrame, table_name: str):
-    if df.empty:
-        print(f"[LOAD] {table_name} CSV empty, skipping...")
-        return
+    with engine.begin() as conn:
+        print("[LOAD] Connected to database. Starting upload…")
 
-    conn = get_conn()
-    cursor = conn.cursor()
+        for csv_file, table, pk_col in TABLES:
+            file_path = DATA_DIR / csv_file
+            if not file_path.exists():
+                print(f"[LOAD] Skipping missing file: {csv_file}")
+                continue
 
-    # Build parameterized insert
-    columns = list(df.columns)
-    placeholders = ", ".join("?" for _ in columns)
-    column_names = ", ".join(columns)
+            df = pd.read_csv(file_path)
 
-    sql = f"INSERT INTO {DB_SCHEMA}.{table_name} ({column_names}) VALUES ({placeholders})"
+            # rename columns if needed
+            if table in COLUMN_MAPS:
+                df.rename(columns=COLUMN_MAPS[table], inplace=True)
 
-    rows = [tuple(x) for x in df.to_numpy()]
+            # For recording table: drop the 'id' column so DB can autogenerate
+            if table == "recording" and "id" in df.columns:
+                df = df.drop(columns=["id"])
 
-    try:
-        cursor.fast_executemany = True
-        cursor.executemany(sql, rows)
-        conn.commit()
-        print(f"[LOAD] Inserted {len(rows)} rows into {table_name}")
-    except pyodbc.IntegrityError as e:
-        print(f"[LOAD] IntegrityError for {table_name}: {e}")
-    finally:
-        cursor.close()
-        conn.close()
+            # fetch existing primary keys to avoid duplicates (except recording)
+            if table != "recording" and pk_col in df.columns:
+                existing_keys = set()
+                query = text(f"SELECT {pk_col} FROM {DB_SCHEMA}.{table}")
+                for row in conn.execute(query):
+                    existing_keys.add(row[0])
 
-def load():
-    print("[LOAD] Starting append...")
-    for file_name in ["country.csv", "city.csv", "botanist.csv", "plant.csv", "recording.csv"]:
-        path = DATA_DIR / file_name
-        if not path.exists():
-            print(f"[LOAD] {file_name} missing, skipping...")
-            continue
-        df = pd.read_csv(path)
-        load_table(df, file_name.replace(".csv",""))
-    print("[LOAD] All done!")
+                before = len(df)
+                df = df[~df[pk_col].isin(existing_keys)]
+                skipped = before - len(df)
+                if skipped:
+                    print(f"[LOAD] Skipped {skipped} duplicate rows for {table}.")
+
+            if df.empty:
+                print(f"[LOAD] Nothing new to insert into {DB_SCHEMA}.{table}.")
+                continue
+
+            print(f"[LOAD] Inserting {len(df)} rows into {DB_SCHEMA}.{table}…")
+            df.to_sql(
+                name=table,
+                con=conn,
+                schema=DB_SCHEMA,
+                if_exists="append",
+                index=False,
+                chunksize=1000,
+                method="multi"
+            )
+
+        print("[LOAD] All tables loaded successfully.")
 
 if __name__ == "__main__":
-    load()
+    try:
+        load()
+    except RuntimeError as exc:
+        print(f"[ERROR] Load failed: {exc}")

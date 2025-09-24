@@ -74,7 +74,7 @@ def clean_plant_records(records: pd.DataFrame, plant_data: dict[list]) -> dict:
     summary["avg_soil_moisture"] = records["soil_moisture"].mean()
 
     summary["last_watered"] = records["last_watered"].max()
-    summary["date"] = records["recording_taken"].dt.date.iloc()[0]
+    summary["date"] = records["recording_taken"].dt.date.min()
     return summary
 
 
@@ -92,9 +92,15 @@ def get_summary_plant_data(plant_data: dict[list]) -> pd.DataFrame:
     return pd.DataFrame(summary_data)
 
 
+def generate_csv(summary: pd.DataFrame) -> None:
+    """Produces a a summary csv for the last 24hrs of data."""
+    summary_date = summary["date"].iloc()[0]
+    summary.to_csv(path_or_buf=f"{summary_date}-summary.csv")
+
+
 if __name__ == "__main__":
     load_dotenv()
     db_conn = get_connection()
     plant_tables = get_data(db_conn)
     plant_summary = get_summary_plant_data(plant_tables)
-    print(plant_summary.head(10))
+    generate_csv(plant_summary)

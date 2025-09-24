@@ -32,6 +32,7 @@ def reset_db() -> None:
 
 
 def handler(event=None, context=None) -> None:
+    """Runs the script within a container"""
     reset_db()
 
 

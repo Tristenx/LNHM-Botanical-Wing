@@ -1,22 +1,34 @@
-FROM python:3.9-slim
+FROM public.ecr.aws/lambda/python:3.9
 
-WORKDIR /app
+ARG UNIXODBC_VERSION=2.3.12
 
-# Install dependencies for the ODBC driver
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    curl \
-    gnupg \
-    unixodbc-dev && \
-    curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg && \
-    curl https://packages.microsoft.com/config/debian/11/prod.list | tee /etc/apt/sources.list.d/mssql-release.list && \
-    apt-get update && \
-    ACCEPT_EULA=Y apt-get install -y --no-install-recommends msodbcsql18
+RUN yum install -y gzip tar openssl-devel gcc gcc-c++ make automake kernel-devel
+
+RUN curl ftp://ftp.unixodbc.org/pub/unixODBC/unixODBC-${UNIXODBC_VERSION}.tar.gz -O \
+    && tar xzvf unixODBC-${UNIXODBC_VERSION}.tar.gz \
+    && cd unixODBC-${UNIXODBC_VERSION} \
+    && ./configure --sysconfdir=/opt --disable-gui --disable-drivers --enable-iconv --with-iconv-char-enc=UTF8 --with-iconv-ucode-enc=UTF16LE --prefix=/opt \
+    && make \
+    && make install
+
+RUN curl https://packages.microsoft.com/config/rhel/9/prod.repo > /etc/yum.repos.d/mssql-release.repo
+RUN yum install -y e2fsprogs fuse-libs libss
+RUN ACCEPT_EULA=Y yum install -y msodbcsql18
+
+ENV CFLAGS="-I/opt/include"
+ENV LDFLAGS="-L/opt/lib"
+
+RUN mkdir /opt/python/ && cd /opt/python/ && pip install pyodbc -t .
+
+RUN yum install -y openssl
+
+WORKDIR ${LAMBDA_TASK_ROOT}
 
 COPY requirements.txt .
 
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt 
 
 COPY . .
 
-CMD [ "python3", "pipeline.py" ]
+# Set the command to run the Lambda handler
+CMD [ "pipeline.handler" ]

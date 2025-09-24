@@ -45,7 +45,7 @@ CREATE TABLE alpha.plant (
 
 -- Recording table
 CREATE TABLE alpha.recording (
-    id INT PRIMARY KEY, 
+    id INT IDENTITY(1,1), 
     plant_id INTEGER REFERENCES plant(plant_id),
     botanist_id INTEGER REFERENCES botanist(botanist_id),
     temperature DECIMAL,

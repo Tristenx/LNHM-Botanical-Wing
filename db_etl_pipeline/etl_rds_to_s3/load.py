@@ -17,7 +17,7 @@ def get_session() -> boto3.session.Session:
     return current_session
 
 
-def handler(event=None, context=None) -> None:
+def handler(event=None, context=None) -> dict[str:str]:
     """Handler function for Lambda that uploads summary data to the S3 bucket."""
     conn = get_connection()
     tables = get_data(conn)
@@ -25,6 +25,9 @@ def handler(event=None, context=None) -> None:
     file_name = generate_csv(summary)
     current_session = get_session()
     current_session.upload_file(file_name, "c19-alpha-s3-bucket", file_name)
+    return {
+        "message": "Uploaded"
+    }
 
 
 if __name__ == "__main__":

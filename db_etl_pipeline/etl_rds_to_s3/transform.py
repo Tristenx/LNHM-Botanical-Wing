@@ -25,15 +25,15 @@ def get_records_for_id(plant_id: int, recordings: list) -> pd.DataFrame:
     """Returns a Dataframe containing all the records for a plant."""
     records = []
     for recording in recordings:
-        if recording[0] == plant_id:
+        if recording[1] == plant_id:
             record = dict()
-            record["recording_id"] = recording[6]
-            record["plant_id"] = recording[0]
-            record["botanist_id"] = recording[1]
-            record["temperature"] = recording[2]
-            record["last_watered"] = recording[3]
-            record["soil_moisture"] = recording[4]
-            record["recording_taken"] = recording[5]
+            record["recording_id"] = recording[0]
+            record["plant_id"] = recording[1]
+            record["botanist_id"] = recording[2]
+            record["temperature"] = recording[3]
+            record["last_watered"] = recording[4]
+            record["soil_moisture"] = recording[5]
+            record["recording_taken"] = recording[6]
             records.append(record)
     return pd.DataFrame(records)
 

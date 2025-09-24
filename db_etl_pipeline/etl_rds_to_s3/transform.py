@@ -6,7 +6,7 @@ import pandas as pd
 from extract import get_connection, get_data
 
 
-def get_all_plant_ids(plants: list) -> list:
+def get_all_plant_ids(plants: list) -> list[int]:
     """Returns a list of unique plant ids."""
     ids = list(set([plant[0] for plant in plants]))
     return ids

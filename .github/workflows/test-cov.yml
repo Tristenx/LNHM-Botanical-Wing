@@ -1,0 +1,32 @@
+name: Python Test Coverage Workflow
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Get the repository code"
+        uses: actions/checkout@v5
+
+      - name: Set up python
+        uses: actions/setup-python@v6
+
+      - name: Install top level dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install API ETL dependencies
+        run: |
+          cd db_etl_pipeline/etl_rds_to_s3
+          pip install -r requirements.txt
+
+      - name: Install DB ETL dependencies
+        run: |
+          cd api_etl_pipeline/extract-from-api
+          pip install -r requirements.txt
+
+      - name: Run tests with coverage
+        run: pytest --cov=. --cov-fail-under=60

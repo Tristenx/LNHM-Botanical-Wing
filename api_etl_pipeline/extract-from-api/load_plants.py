@@ -15,12 +15,12 @@ warnings.filterwarnings("ignore", category=UserWarning, module="urllib3")
 load_dotenv()
 
 DB_HOST   = os.getenv("DB_HOST")
-DB_PORT   = os.getenv("DB_PORT")
+DB_PORT   = os.getenv("DB_PORT", "1433")
 DB_USER   = os.getenv("DB_USER")
 DB_PASS   = os.getenv("DB_PASSWORD")
 DB_NAME   = os.getenv("DB_NAME")
-DB_SCHEMA = os.getenv("DB_SCHEMA")
-DB_DRIVER = os.getenv("DB_DRIVER")
+DB_SCHEMA = os.getenv("DB_SCHEMA", "alpha")
+DB_DRIVER = os.getenv("DB_DRIVER", "ODBC Driver 18 for SQL Server")
 
 DATA_DIR = Path("data/transformed")
 
@@ -30,10 +30,10 @@ TABLES = [
     ("city.csv",      "city",      "city_id"),
     ("botanist.csv",  "botanist",  "botanist_id"),
     ("plant.csv",     "plant",     "plant_id"),
-    ("recording.csv", "recording", "id"),
+    ("recording.csv", "recording", "id"),  # id will autoincrement
 ]
 
-#CSV column → DB column renames
+# CSV column → DB column renames
 COLUMN_MAPS = {
     "botanist": {
         "name": "botanist_name",
@@ -74,14 +74,17 @@ def load():
             if table in COLUMN_MAPS:
                 df.rename(columns=COLUMN_MAPS[table], inplace=True)
 
-            # fetch existing primary keys to avoid duplicates
-            existing_keys = set()
-            query = text(f"SELECT {pk_col} FROM {DB_SCHEMA}.{table}")
-            for row in conn.execute(query):
-                existing_keys.add(row[0])
+            # For recording table: drop the 'id' column so DB can autogenerate
+            if table == "recording" and "id" in df.columns:
+                df = df.drop(columns=["id"])
 
-            # filter out rows whose primary key already exists
-            if pk_col in df.columns:
+            # fetch existing primary keys to avoid duplicates (except recording)
+            if table != "recording" and pk_col in df.columns:
+                existing_keys = set()
+                query = text(f"SELECT {pk_col} FROM {DB_SCHEMA}.{table}")
+                for row in conn.execute(query):
+                    existing_keys.add(row[0])
+
                 before = len(df)
                 df = df[~df[pk_col].isin(existing_keys)]
                 skipped = before - len(df)
@@ -110,4 +113,3 @@ if __name__ == "__main__":
         load()
     except RuntimeError as exc:
         print(f"[ERROR] Load failed: {exc}")
-    

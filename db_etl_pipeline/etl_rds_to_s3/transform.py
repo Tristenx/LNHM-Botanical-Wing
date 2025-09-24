@@ -6,7 +6,7 @@ import pandas as pd
 from extract import get_connection, get_data
 
 
-def get_all_plant_ids(plants: list) -> list:
+def get_all_plant_ids(plants: list) -> list[int]:
     """Returns a list of unique plant ids."""
     ids = list(set([plant[0] for plant in plants]))
     return ids
@@ -25,7 +25,7 @@ def get_records_for_id(plant_id: int, recordings: list) -> pd.DataFrame:
     """Returns a Dataframe containing all the records for a plant."""
     records = []
     for recording in recordings:
-        if recording[0] == plant_id:
+        if recording[1] == plant_id:
             record = dict()
             record["recording_id"] = recording[6]
             record["plant_id"] = recording[0]

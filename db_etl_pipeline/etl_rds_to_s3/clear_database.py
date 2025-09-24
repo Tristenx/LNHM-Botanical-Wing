@@ -1,7 +1,6 @@
-""""Clears the RDS database."""
+""""A lambda function to clear the RDS database."""
 
 from os import environ
-
 from dotenv import load_dotenv
 import pyodbc
 
@@ -25,7 +24,16 @@ def clear_database(conn: pyodbc.Connection) -> None:
             conn.commit()
 
 
-if __name__ == "__main__":
+def reset_db() -> None:
+    """Runs the python script to clear the database."""
     load_dotenv()
     with get_connection() as db_conn:
         clear_database(db_conn)
+
+
+def handler(event=None, context=None) -> None:
+    reset_db()
+
+
+if __name__ == "__main__":
+    handler()

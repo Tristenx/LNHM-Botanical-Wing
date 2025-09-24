@@ -2,6 +2,7 @@ name: Python Quality Check Workflow
 
 on:
   push:
+  pull_request:
 
 jobs:
   quality_check:
@@ -14,8 +15,17 @@ jobs:
       - name: Set up python
         uses: actions/setup-python@v6
 
-      - name: Install dependencies
+      - name: Install top level dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install API ETL dependencies
         run: |
+          cd db_etl_pipeline/etl_rds_to_s3
+          pip install -r requirements.txt
+
+      - name: Install DB ETL dependencies
+        run: |
+          cd api_etl_pipeline/extract-from-api
           pip install -r requirements.txt
 
       - name: "Lint"
@@ -23,3 +33,4 @@ jobs:
           for file in $(git ls-files '*.py'); do
             pylint --fail-under=8.5 "$file"
           done
+

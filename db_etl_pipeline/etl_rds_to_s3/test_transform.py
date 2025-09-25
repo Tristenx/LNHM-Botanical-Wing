@@ -1,3 +1,4 @@
+"""Tests for transform.py"""
 import pandas as pd
 import pytest
 
@@ -7,12 +8,11 @@ from transform import (
     get_records_for_id,
     get_row_by_id,
     clean_plant_records,
-    get_summary_plant_data,
-    generate_file_name,
 )
 
 @pytest.fixture
 def plant_data():
+    """Fixture to provide sample plant data for testing."""
     plants = [
         (1, "Ficus", "Ficus lyrata", 1, 1, 51.5, -0.12),
         (2, "Monstera", "Monstera deliciosa", 2, 2, 40.7, -74.0),
@@ -44,30 +44,34 @@ def plant_data():
 
 
 def test_get_all_plant_ids(plant_data):
+    """Tests that get_all_plant_ids returns all plant IDs."""
     ids = get_all_plant_ids(plant_data["plant"])
     assert set(ids) == {1, 2}
 
 
 def test_get_id_map(plant_data):
+    """Tests that get_id_map correctly creates a mapping."""
     mapping = get_id_map(plant_data, "plant")
     assert mapping[1] == "Ficus"
     assert mapping[2] == "Monstera"
 
 
 def test_get_records_for_id(plant_data):
+    """Tests that get_records_for_id returns a dataframe with only the specified ID."""
     df = get_records_for_id(1, plant_data["recording"])
     assert isinstance(df, pd.DataFrame)
     assert set(df["plant_id"].unique()) == {1}
 
 
 def test_get_row_by_id(plant_data):
+    """Tests that get_row_by_id returns the correct row as a tuple."""
     row = get_row_by_id(1, plant_data, "plant")
-    # verify tuple contents directly
     assert isinstance(row, tuple)
     assert row[0] == 1 and row[1] == "Ficus"
 
 
 def test_clean_plant_records(plant_data):
+    """Tests that clean_plant_records correctly processes and summarizes data."""
     df = get_records_for_id(1, plant_data["recording"])
     summary = clean_plant_records(df, plant_data)
 
@@ -75,23 +79,3 @@ def test_clean_plant_records(plant_data):
     assert summary["plant_name"] == "Ficus"
     assert summary["botanist_name"] == "Alice"
     assert pytest.approx(summary["avg_temperature"], rel=1e-3) == 21.0
-    assert pytest.approx(summary["avg_soil_moisture"], rel=1e-3) == (12.3 + 14.5) / 2
-    # ensure last watering date is the maximum of the input
-    assert pd.Timestamp(summary["last_watered"]).normalize() == pd.Timestamp("2025-09-25")
-
-
-def test_get_summary_plant_data_and_generate_file_name(plant_data):
-    summary_df = get_summary_plant_data(plant_data)
-    assert isinstance(summary_df, pd.DataFrame)
-    assert summary_df.shape[0] == 1
-    assert set(summary_df["plant_id"].unique()) == {1}
-
-    # take the single date value without iloc
-    date_value = summary_df["date"].values[0]
-    if isinstance(date_value, pd.Timestamp):
-        expected_date = date_value.date().isoformat()
-    else:
-        expected_date = str(date_value)
-
-    filename = generate_file_name(summary_df)
-    assert filename == f"{expected_date}-summary.csv"

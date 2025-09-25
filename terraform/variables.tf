@@ -37,3 +37,8 @@ variable "DB_PASSWORD" {
   type      = string
   sensitive = true
 }
+
+variable "DB_DRIVER" {
+  type      = string
+  sensitive = true
+}

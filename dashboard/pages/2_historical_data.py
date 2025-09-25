@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-from charts import create_bar_chart, create_line_chart
+from charts import create_temp_chart, create_soil_moisture_chart
 
 
 if __name__ == "__main__":

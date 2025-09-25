@@ -38,6 +38,15 @@ resource "aws_ecr_repository" "c19-alpha-ecr-s3" {
   }
 }
 
+resource "aws_ecr_repository" "c19-alpha-ecr-dashboard" {
+  name                 = "c19-alpha-ecr-dashboard"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
 # Lambdas 
 resource "aws_iam_role" "c19_alpha_lambda_execution_role" {
   name = "c19_alpha_lambda_execution_role"

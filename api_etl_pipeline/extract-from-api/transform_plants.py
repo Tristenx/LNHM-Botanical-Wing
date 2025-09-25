@@ -7,7 +7,7 @@ import re
 import pandas as pd
 
 
-DATA_DIR = Path("data")
+DATA_DIR = Path("/tmp")
 RAW_FILE = DATA_DIR / "plants-raw.csv"
 OUT_DIR = DATA_DIR / "transformed"
 
@@ -33,20 +33,16 @@ def transform():
     """Handles all transformation logic for the raw plants data .csv file. """
     df = pd.read_csv(RAW_FILE)
 
-    #  clean strings
     for col in df.select_dtypes("object").columns:
         df[col] = df[col].astype(str).str.strip().replace({"nan": None})
 
-    # numeric + datetime
     for col in ["temperature", "soil_moisture", "latitude", "longitude"]:
         df[col] = clean_numeric(df[col])
     for col in ["last_watered", "recording_taken"]:
         df[col] = pd.to_datetime(df[col], errors="coerce", utc=True)
-    
-    # Filter for valid values.
+
     df = df[(df["temperature"] >= 0) & (df["soil_moisture"].between(0, 100))]
 
-    # dimension tables
     country = (
         df[["origin_country"]]
         .dropna()
@@ -81,7 +77,6 @@ def transform():
     botanist["phone_number"] = botanist["phone_number"].apply(normalise_phone)
     botanist["botanist_id"] = botanist.index + 1
 
-    # join to map foreign keys
     df = (
         df.merge(country, left_on="origin_country", right_on="name", how="left")
           .merge(city, left_on="origin_city", right_on="name", how="left", suffixes=("", "_city"))
@@ -89,7 +84,6 @@ def transform():
                  left_on="botanist_email", right_on="email", how="left")
     )
 
-    # plant table includes latitude/longitude directly
     plant = df[
         [
             "plant_id",
@@ -114,7 +108,6 @@ def transform():
     ].copy()
     recording["recording_id"] = recording.index + 1
 
-    # save outputs
     country.to_csv(OUT_DIR / "country.csv", index=False)
     city.to_csv(OUT_DIR / "city.csv", index=False)
     plant.to_csv(OUT_DIR / "plant.csv", index=False)

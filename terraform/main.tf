@@ -69,6 +69,20 @@ resource "aws_iam_role_policy_attachment" "c19_alpha_lambda_basic_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+resource "aws_iam_role_policy" "c19_alpha_lambda_to_s3_policy" {
+  name = "c19_alpha_lambda_to_s3_policy"
+  role = aws_iam_role.c19_alpha_lambda_execution_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action   = "s3:PutObject"
+      Effect   = "Allow"
+      Resource = "arn:aws:s3:::c19-alpha-s3-bucket/*"
+    }]
+  })
+}
+
 resource "aws_lambda_function" "c19_alpha_lambda_to_s3" {
   function_name = "c19_alpha_lambda_to_s3"
   role          = aws_iam_role.c19_alpha_lambda_execution_role.arn
@@ -185,5 +199,110 @@ resource "aws_glue_crawler" "c19_alpha_glue_crawler" {
 
   s3_target {
     path = "s3://${aws_s3_bucket.c19-alpha-s3-bucket.bucket}"
+  }
+}
+
+# ECS
+resource "aws_ecs_task_definition" "c19_alpha_ecs_task_definition" {
+  family                   = "c19_alpha_ecs_task_definition"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = 1024
+  memory                   = 2048
+  execution_role_arn       = "arn:aws:iam::129033205317:role/ecsTaskExecutionRole"
+  task_role_arn            = aws_iam_role.c19_alpha_ecs_role.arn
+  container_definitions = jsonencode([
+    {
+      name      = "c19_alpha_ecs_dashboard_task",
+      image     = "129033205317.dkr.ecr.eu-west-2.amazonaws.com/c19-alpha-ecr-dashboard",
+      cpu       = 10,
+      memory    = 512,
+      essential = true
+      portMappings = [
+        {
+          containerPort = 8501
+          hostPort      = 8501
+          protocol      = "tcp"
+        }
+      ]
+      environment = [
+        { name = "DB_DRIVER", value = var.DB_DRIVER },
+        { name = "DB_HOST", value = var.DB_HOST },
+        { name = "DB_PORT", value = var.DB_PORT },
+        { name = "DB_NAME", value = var.DB_NAME },
+        { name = "DB_USERNAME", value = var.DB_USERNAME },
+      { name = "DB_PASSWORD", value = var.DB_PASSWORD }]
+      logConfiguration = {
+        logDriver = "awslogs"
+        "options" : {
+          awslogs-group         = "/ecs/c19_alpha_logs"
+          awslogs-create-group  = "true"
+          awslogs-stream-prefix = "ecs"
+          awslogs-region        = "${var.AWS_REGION}"
+        }
+      }
+    }
+  ])
+
+  runtime_platform {
+    operating_system_family = "LINUX"
+    cpu_architecture        = "X86_64"
+  }
+}
+
+resource "aws_iam_role" "c19_alpha_ecs_role" {
+  name = "c19-alpha_ecs_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Effect = "Allow",
+      Principal = {
+        Service = "ecs-tasks.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "c19_alpha_ecs_athena" {
+  role       = aws_iam_role.c19_alpha_ecs_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonAthenaFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "c19_alpha_ecs_rds" {
+  role       = aws_iam_role.c19_alpha_ecs_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonRDSFullAccess"
+}
+
+resource "aws_security_group" "c19_alpha_ecs_sg" {
+  name        = "c19_alpha_ecs_sg"
+  description = "Allow public to access Streamlit"
+  vpc_id      = "vpc-0f29b6a6ab918bcd5"
+
+  ingress {
+    from_port   = 8501
+    to_port     = 8501
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_ecs_service" "c19_alpha_ecs_service" {
+  name            = "c19_alpha_ecs_service"
+  cluster         = "arn:aws:ecs:eu-west-2:129033205317:cluster/c19-ecs-cluster"
+  task_definition = aws_ecs_task_definition.c19_alpha_ecs_task_definition.arn
+  desired_count   = "1"
+  network_configuration {
+    subnets          = ["subnet-00506a8db091bdf2a"]
+    security_groups  = [aws_security_group.c19_alpha_ecs_sg.id]
+    assign_public_ip = true
   }
 }

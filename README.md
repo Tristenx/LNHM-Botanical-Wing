@@ -9,7 +9,8 @@ is processed by a Lambda running an ETL script that runs once every minute. This
 recordings into an RDS running Microsoft SQL Server. Once a day at midnight a step function is executed which runs 
 two Lambdas in sequence. The first Lambda is an ETL script which extracts recordings from the RDS and summarizes the 
 records for each plant. This summary data is then loaded into a S3 bucket for long term storage. The second Lambda is 
-a script which resets the SQL Server database which allows us to keep costs down. 
+a script which resets the SQL Server database which allows us to keep costs down. Most of the required cloud architecture 
+can be created using the terraform script within the terraform directory.
 
 ## Getting Started
 

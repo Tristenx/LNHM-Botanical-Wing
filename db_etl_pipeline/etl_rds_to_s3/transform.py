@@ -94,7 +94,7 @@ def get_summary_plant_data(plant_data: dict[list]) -> pd.DataFrame:
 
 def generate_file_name(summary: pd.DataFrame) -> str:
     """Returns the name of the file."""
-    file_name = f"{summary["date"].iloc()[0]}-summary.csv"
+    file_name = summary["date"].iloc()[0]
     return file_name
 
 

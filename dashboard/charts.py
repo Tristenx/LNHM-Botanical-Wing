@@ -13,7 +13,7 @@ def create_bar_chart(df: pd.DataFrame, x_axis: str, y_axis: str, chosen: list[st
 
     st.altair_chart(alt.Chart(df).mark_bar().encode(
         x=x_axis,
-        y=alt.Y(y_axis)
+        y=alt.Y(f"{y_axis}:Q")
     ))
 
 
@@ -24,6 +24,6 @@ def create_line_chart(df: pd.DataFrame, x_axis: str, y_axis: str, chosen: list[s
         df = df[df["plant_name"].isin(chosen)]
 
     st.altair_chart(alt.Chart(df).mark_line().encode(
-        x=x_axis,
-        y=y_axis
+        x=alt.X(x_axis),
+        y=alt.Y(f"{y_axis}:Q")
     ))

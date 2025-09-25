@@ -1,12 +1,13 @@
 """Script that loads the summary csv file into the S3 bucket."""
 
 from os import environ
+import io
 
 import boto3
 from dotenv import load_dotenv
 
 from extract import get_connection, get_data
-from transform import get_summary_plant_data, generate_csv
+from transform import get_summary_plant_data, generate_file_name
 
 
 def get_session() -> boto3.session.Session:
@@ -22,9 +23,12 @@ def handler(event=None, context=None) -> dict[str:str]:
     conn = get_connection()
     tables = get_data(conn)
     summary = get_summary_plant_data(tables)
-    file_name = generate_csv(summary)
+    csv_buffer = io.StringIO()
+    summary.to_csv(csv_buffer, index=False)
+    file_name = generate_file_name(summary)
     current_session = get_session()
-    current_session.upload_file(file_name, "c19-alpha-s3-bucket", file_name)
+    current_session.put_object(
+        Bucket="c19-alpha-s3-bucket", Key=file_name, Body=csv_buffer.getvalue())
     return {
         "message": "Uploaded"
     }

@@ -72,10 +72,12 @@ def test_get_records_for_id_correct_columns():
     """Checks whether the function creates a df with the correct."""
 
     res = get_records_for_id(
-        1, [[1, 2, 12, "2025-09-23 13:08:03.000", 40, "2025-09-24 08:51:52.632", 23]])
+        1, [[1, 1, 12, "2025-09-23 13:08:03.000", 40, "2025-09-24 08:51:52.632", 23]])
 
     db_columns = ['plant_id', 'botanist_id', 'temperature',
                   'last_watered', 'soil_moisture', 'recording_taken', 'recording_id']
+
+    print(res)
 
     assert sorted(get_df_columns(res)) == sorted(db_columns)
 

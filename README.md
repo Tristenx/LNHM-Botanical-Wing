@@ -37,6 +37,18 @@ DB_PASSWORD=xxxxx
 DB_DRIVER=xxxxx
 ```
 
+### Sample terraform secrets
+```
+AWS_ACCESS_KEY_ID     = "xxxxx"
+AWS_SECRET_ACCESS_KEY = "xxxxx"
+DB_HOST               = "xxxxx"
+DB_PORT               = "xxxxx"
+DB_NAME               = "xxxxx"
+DB_USERNAME           = "xxxxx"
+DB_PASSWORD           = "xxxxx"
+DB_DRIVER             = "xxxxx"
+```
+
 ### Executing Program
 #### Setup the database
 - `cd db_etl_pipeline/`

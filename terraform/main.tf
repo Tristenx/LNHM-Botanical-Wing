@@ -131,3 +131,59 @@ resource "aws_lambda_function" "c19_alpha_lambda_destroy" {
     }
   }
 }
+
+# Glue Catalog DB and Glue Crawler
+resource "aws_glue_catalog_database" "c19_alpha_glue_catalog_db" {
+  name = "c19_alpha_glue_catalog_db"
+}
+
+resource "aws_iam_role" "c19_alpha_glue_crawler_role" {
+  name = "c19_alpha_glue_crawler_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "VisualEditor0",
+      Action = "sts:AssumeRole",
+      Effect = "Allow",
+      Principal = {
+        Service = "glue.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "glue_crawler_s3_access" {
+  name = "glue_crawler_s3_access"
+  role = aws_iam_role.c19_alpha_glue_crawler_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Action = [
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      Resource = [
+        "arn:aws:s3:::c19-alpha-s3-bucket",
+        "arn:aws:s3:::c19-alpha-s3-bucket/*"
+      ]
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "c19_alpha_glue_crawler_policy" {
+  role       = aws_iam_role.c19_alpha_glue_crawler_role.id
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+}
+
+resource "aws_glue_crawler" "c19_alpha_glue_crawler" {
+  database_name = aws_glue_catalog_database.c19_alpha_glue_catalog_db.name
+  name          = "c19_alpha_glue_crawler"
+  role          = aws_iam_role.c19_alpha_glue_crawler_role.arn
+
+  s3_target {
+    path = "s3://${aws_s3_bucket.c19-alpha-s3-bucket.bucket}"
+  }
+}

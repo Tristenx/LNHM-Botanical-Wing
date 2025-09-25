@@ -92,10 +92,9 @@ def get_summary_plant_data(plant_data: dict[list]) -> pd.DataFrame:
     return pd.DataFrame(summary_data)
 
 
-def generate_csv(summary: pd.DataFrame) -> str:
-    """Produces a a summary csv for the last 24hrs of data."""
+def generate_file_name(summary: pd.DataFrame) -> str:
+    """Returns the name of the file."""
     file_name = f"{summary["date"].iloc()[0]}-summary.csv"
-    summary.to_csv(path_or_buf=file_name)
     return file_name
 
 
@@ -104,4 +103,4 @@ if __name__ == "__main__":
     db_conn = get_connection()
     plant_tables = get_data(db_conn)
     plant_summary = get_summary_plant_data(plant_tables)
-    csv_name = generate_csv(plant_summary)
+    csv_name = generate_file_name(plant_summary)

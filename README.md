@@ -16,6 +16,8 @@ can be created using the terraform script within the terraform directory.
 
 ### Dependencies
 - macOS
+- Docker
+- Terraform
 - Access to a RDS running Microsoft SQL Server
 - `brew install sqlcmd`
 
@@ -35,6 +37,46 @@ DB_DRIVER=xxxxx
 ```
 
 ### Executing Program
+#### Setup the database
+- `cd db_etl_pipeline/`
+- `bash db_setup.sh`
+- `cd ..`
+
+#### Create and push etl-rds container to ECR
+- `cd api_etl_pipeline/extract-from-api/`
+- `aws ecr get-login-password --region YOUR_AWS_REGION`
+- `aws ecr get-login-password --region YOUR_AWS_REGION | docker login --username AWS --password-stdin YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com`
+- `docker buildx build . -t APP_NAME:latest --platform "Linux/amd64"`
+- `docker tag YOUR_IMAGE_NAME:latest YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/YOUR_REPOSITORY_NAME:latest`
+- `docker push YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/YOUR_REPOSITORY_NAME:latest`
+- `cd ../..`
+
+#### Create and push etl-s3 container to ECR
+- `cd db_etl_pipeline/etl_rds_to_s3/`
+- `aws ecr get-login-password --region YOUR_AWS_REGION | docker login --username AWS --password-stdin YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com`
+- `docker buildx build . -t APP_NAME:latest --platform "Linux/amd64"`
+- `docker tag YOUR_IMAGE_NAME:latest YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/YOUR_REPOSITORY_NAME:latest`
+- `docker push YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/YOUR_REPOSITORY_NAME:latest`
+- `cd ../..`
+
+#### Create and push destroy container to ECR
+- `cd db_etl_pipeline/etl_rds_to_s3/reset_rds`
+- `aws ecr get-login-password --region YOUR_AWS_REGION | docker login --username AWS --password-stdin YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com`
+- `docker buildx build . -t APP_NAME:latest --platform "Linux/amd64"`
+- `docker tag YOUR_IMAGE_NAME:latest YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/YOUR_REPOSITORY_NAME:latest`
+- `docker push YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/YOUR_REPOSITORY_NAME:latest`
+- `cd ../../..`
+
+#### Create AWS resources with terraform
+- `cd terraform`
+- `terraform init`
+- `terraform apply`
+
+#### Setup final AWS resources
+- Setup an EventBridge schedule that runs the API ETL script every minute.
+- Setup a Step Function which first runs the RDS ETL then the clear database script.
+- Setup an EventBridge schedule that runs the Step Function once a day at midnight.
+
 
 ## Authors
 - cameronriley0 (Project Manager)

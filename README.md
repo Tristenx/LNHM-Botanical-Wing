@@ -37,7 +37,7 @@ DB_PASSWORD=xxxxx
 DB_DRIVER=xxxxx
 ```
 
-### Sample terraform secrets
+### Sample secret.tfvars
 ```
 AWS_ACCESS_KEY_ID     = "xxxxx"
 AWS_SECRET_ACCESS_KEY = "xxxxx"
@@ -56,6 +56,9 @@ DB_DRIVER             = "xxxxx"
 - `cd ..`
 
 #### Create and push etl-rds container to ECR
+- `cd terraform`
+- `terraform apply -target aws_lambda_function.c19-alpha-ecr-rds -var-file="secret.tfvars"`
+- `cd ..`
 - `cd api_etl_pipeline/extract-from-api/`
 - `aws ecr get-login-password --region YOUR_AWS_REGION`
 - `aws ecr get-login-password --region YOUR_AWS_REGION | docker login --username AWS --password-stdin YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com`
@@ -65,6 +68,9 @@ DB_DRIVER             = "xxxxx"
 - `cd ../..`
 
 #### Create and push etl-s3 container to ECR
+- `cd terraform`
+- `terraform apply -target aws_lambda_function.c19-alpha-ecr-s3 -var-file="secret.tfvars"`
+- `cd ..`
 - `cd db_etl_pipeline/etl_rds_to_s3/`
 - `aws ecr get-login-password --region YOUR_AWS_REGION | docker login --username AWS --password-stdin YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com`
 - `docker buildx build . -t APP_NAME:latest --platform "Linux/amd64"`
@@ -73,6 +79,9 @@ DB_DRIVER             = "xxxxx"
 - `cd ../..`
 
 #### Create and push destroy container to ECR
+- `cd terraform`
+- `terraform apply -target aws_lambda_function.c19-alpha-ecr-destroy -var-file="secret.tfvars"`
+- `cd ..`
 - `cd db_etl_pipeline/etl_rds_to_s3/reset_rds`
 - `aws ecr get-login-password --region YOUR_AWS_REGION | docker login --username AWS --password-stdin YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com`
 - `docker buildx build . -t APP_NAME:latest --platform "Linux/amd64"`

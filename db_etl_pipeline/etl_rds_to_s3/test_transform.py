@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name
 """Tests for transform.py"""
 import pandas as pd
 import pytest

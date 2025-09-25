@@ -10,14 +10,6 @@ from extract import get_connection, get_data
 from transform import get_summary_plant_data, generate_file_name
 
 
-def get_session() -> boto3.session.Session:
-    """Returns a boto3 session for upload."""
-    current_session = boto3.session.Session(
-        aws_access_key_id=environ["ACCESS_KEY"],
-        aws_secret_access_key=environ["SECRET_ACCESS_KEY"]).client("s3")
-    return current_session
-
-
 def handler(event=None, context=None) -> dict[str:str]:
     """Handler function for Lambda that uploads summary data to the S3 bucket."""
     conn = get_connection()
@@ -26,8 +18,8 @@ def handler(event=None, context=None) -> dict[str:str]:
     csv_buffer = io.StringIO()
     summary.to_csv(csv_buffer, index=False)
     file_name = generate_file_name(summary)
-    current_session = get_session()
-    current_session.put_object(
+    s3 = boto3.client("s3")
+    s3.put_object(
         Bucket="c19-alpha-s3-bucket", Key=file_name, Body=csv_buffer.getvalue())
     return {
         "message": "Uploaded"

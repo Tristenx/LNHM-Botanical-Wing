@@ -1,6 +1,5 @@
 """Script that loads the summary csv file into the S3 bucket."""
 
-from os import environ
 import io
 
 import boto3

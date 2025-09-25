@@ -1,6 +1,6 @@
 """Tests for extract.py"""
 import pyodbc
-import extract
+from extract import get_connection, query_database, get_data
 
 
 def test_get_connection_builds_correct_conn_string(monkeypatch):
@@ -13,7 +13,9 @@ def test_get_connection_builds_correct_conn_string(monkeypatch):
         "DB_USERNAME": "user",
         "DB_PASSWORD": "pass",
     }
-    monkeypatch.setattr(extract, "environ", env)
+    # Use monkeypatch.setenv() to directly set environment variables for the test
+    for key, value in env.items():
+        monkeypatch.setenv(key, value)
 
     called_args = {}
 
@@ -23,7 +25,7 @@ def test_get_connection_builds_correct_conn_string(monkeypatch):
 
     monkeypatch.setattr(pyodbc, "connect", fake_connect)
 
-    conn = extract.get_connection()
+    conn = get_connection()
     assert conn == "FAKE_CONNECTION"
     for v in env.values():
         assert v in called_args["conn_str"]
@@ -59,7 +61,7 @@ def test_query_database_returns_cursor_results():
             return FakeCursor()
 
     sql = "SELECT 1"
-    result = extract.query_database(FakeConn(), sql)
+    result = query_database(FakeConn(), sql)
     assert result == fake_result
     assert executed["sql"] == sql
 
@@ -68,15 +70,15 @@ def test_get_data_calls_query_database_for_each_table(monkeypatch):
     """Tests that get_data queries the database for each expected table."""
     called_sql = []
 
+    # The lambda function should return a list containing the SQL string itself
     def fake_query(_conn, sql):
-        """Mocks the query_database function."""
         called_sql.append(sql)
         return [sql]
 
-    monkeypatch.setattr(extract, "query_database", fake_query)
+    monkeypatch.setattr("extract.query_database", fake_query)
 
     fake_conn = object()
-    data = extract.get_data(fake_conn)
+    data = get_data(fake_conn)
 
     expected_keys = {"country", "city", "plant", "recording", "botanist"}
     assert set(data.keys()) == expected_keys

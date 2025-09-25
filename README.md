@@ -12,6 +12,9 @@ records for each plant. This summary data is then loaded into a S3 bucket for lo
 a script which resets the SQL Server database which allows us to keep costs down. Most of the required cloud architecture 
 can be created using the terraform script within the terraform directory.
 
+[Architecture Diagram](documentation/architecture_diagram.png)
+[ERD](documentation/database_erd.png)
+
 ## Getting Started
 
 ### Dependencies

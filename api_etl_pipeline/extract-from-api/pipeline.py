@@ -7,7 +7,7 @@ from transform_plants import transform
 from load_plants import load
 
 
-def handler(event, context):
+def handler(_, __):
     """
     AWS Lambda entry point for the pipeline.
     This function is called by the Lambda runtime.

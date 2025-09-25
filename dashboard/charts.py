@@ -13,7 +13,7 @@ def create_bar_chart(df: pd.DataFrame, x_axis: str, y_axis: str, chosen: list[st
 
     st.altair_chart(alt.Chart(df).mark_bar().encode(
         x=x_axis,
-        y=y_axis
+        y=alt.Y(y_axis)
     ))
 
 

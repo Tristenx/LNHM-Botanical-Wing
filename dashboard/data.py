@@ -7,9 +7,7 @@ from os import environ
 from dotenv import load_dotenv
 
 
-st.cache_resource
-
-
+@st.cache_resource
 def get_connection() -> pyodbc.Connection:
     """Returns a connection to the database."""
     load_dotenv()
@@ -19,9 +17,7 @@ def get_connection() -> pyodbc.Connection:
     return pyodbc.connect(conn_str)
 
 
-st.cache_data(ttl=60)
-
-
+@st.cache_data(ttl=60)
 def load_all_plant_recording_data() -> pd.DataFrame:
     """Returns all plant recording data from the db as a dataframe."""
     conn = get_connection()
@@ -31,6 +27,15 @@ def load_all_plant_recording_data() -> pd.DataFrame:
         res = cur.fetchall()
 
     return format_plant_recording_data(res)
+
+
+@st.cache_data(ttl=60)
+def load_latest_plant_recordings() -> pd.DataFrame:
+    """Filters for the latest recording for each plant in the dataframe."""
+
+    df = load_all_plant_recording_data()
+
+    return df.loc[df.groupby('plant_name')['last_watered'].idxmax()]
 
 
 def format_plant_recording_data(data: list[tuple]) -> pd.DataFrame:

@@ -1,21 +1,25 @@
-import pandas as pd
+"""Dashboard displaying information about plant data."""
 import streamlit as st
 
-from data import load_all_plant_recording_data, load_all_plants
+from data import load_all_plants, load_latest_plant_recordings
 from charts import create_bar_chart, create_line_chart
-
 
 if __name__ == "__main__":
 
-    all_plant_recording_data = load_all_plant_recording_data()
+    latest_plant_recordings = load_latest_plant_recordings()
 
     st.title("Live plant data")
 
-    all_plants = load_all_plants(all_plant_recording_data)
+    all_plants = load_all_plants(latest_plant_recordings)
     chosen_plants = st.multiselect(
-        label="Chosen plants", options=all_plants, default=all_plants)
+        label="Chosen plants", options=all_plants, default=all_plants[:10])
 
-    create_line_chart(all_plant_recording_data, "plant_name",
+    # Chart only showing data with one entry per plant
+
+    create_line_chart(latest_plant_recordings, "plant_name",
                       "temperature", chosen_plants)
-    create_line_chart(all_plant_recording_data, "plant_name",
+
+    # moisture graph
+
+    create_line_chart(latest_plant_recordings, "plant_name",
                       "soil_moisture", chosen_plants)

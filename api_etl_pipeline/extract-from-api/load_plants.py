@@ -22,7 +22,7 @@ DB_NAME   = os.getenv("DB_NAME")
 DB_SCHEMA = os.getenv("DB_SCHEMA", "alpha")
 DB_DRIVER = os.getenv("DB_DRIVER", "ODBC Driver 18 for SQL Server")
 
-DATA_DIR = Path("data/transformed")
+DATA_DIR = Path("/tmp/transformed")
 
 # CSV → Table mappings
 TABLES = [

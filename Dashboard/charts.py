@@ -7,6 +7,7 @@ import streamlit as st
 
 @st.cache_data
 def create_bar_chart(df: pd.DataFrame, x_axis: str, y_axis: str, chosen: list[str] = None):
+    """Template to create a bar chart for the dashboard."""
     if chosen:
         df = df[df["plant_name"].isin(chosen)]
 
@@ -18,6 +19,7 @@ def create_bar_chart(df: pd.DataFrame, x_axis: str, y_axis: str, chosen: list[st
 
 @st.cache_data
 def create_line_chart(df: pd.DataFrame, x_axis: str, y_axis: str, chosen: list[str] = None):
+    """Template to create a line chart for the dashboard."""
     if chosen:
         df = df[df["plant_name"].isin(chosen)]
 

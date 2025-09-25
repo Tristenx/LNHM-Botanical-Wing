@@ -69,6 +69,20 @@ resource "aws_iam_role_policy_attachment" "c19_alpha_lambda_basic_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+resource "aws_iam_role_policy" "c19_alpha_lambda_to_s3_policy" {
+  name = "c19_alpha_lambda_to_s3_policy"
+  role = aws_iam_role.c19_alpha_lambda_execution_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action   = "s3:PutObject"
+      Effect   = "Allow"
+      Resource = "arn:aws:s3:::c19-alpha-s3-bucket/*"
+    }]
+  })
+}
+
 resource "aws_lambda_function" "c19_alpha_lambda_to_s3" {
   function_name = "c19_alpha_lambda_to_s3"
   role          = aws_iam_role.c19_alpha_lambda_execution_role.arn

@@ -1,16 +1,15 @@
 """
+Extract plant data from the LNMH API and save as plants-raw.csv.
 
-Extract plant data from the LNMH API and save as data/plants-raw.csv.
-
-Uses multiprocessing to speed up API calls.
+Uses multithreading to speed up API calls.
 
 """
 
 from pathlib import Path
 from typing import Optional, Any
 import csv
-import multiprocessing as mp
 import sys
+import concurrent.futures
 import requests
 
 # config
@@ -18,14 +17,13 @@ API_URL = "https://sigma-labs-bot.herokuapp.com/api/plants/"
 TARGET_COUNT = 50
 START_ID = 1
 MAX_ATTEMPTS = 85
-DATA_DIR = Path("data")
-RAW_FILE = DATA_DIR / "plants-raw.csv"
+RAW_FILE = Path("/tmp/plants-raw.csv")
 
 # Custom exception
 class PlantFetchError(Exception):
     """Custom exception for errors when fetching plant data."""
 
-#API Helper funcs
+# API Helper funcs
 def safe_get(dictionary: dict, k: str) -> Optional[Any]:
     """Returns dictionary key if dictionary is a dict - else returns None."""
     return dictionary.get(k) if isinstance(dictionary, dict) else None
@@ -70,12 +68,11 @@ def fetch_single(pid: int) -> Optional[dict]:
 # main logic
 def extract():
     """Fetch plant records in parallel and write plants-raw.csv."""
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
     ids = list(range(START_ID, START_ID + MAX_ATTEMPTS))
     rows = []
 
-    with mp.Pool(processes=mp.cpu_count()) as pool:
-        for result in pool.imap_unordered(fetch_single, ids):
+    with concurrent.futures.ThreadPoolExecutor(max_workers=30) as executor:
+        for result in executor.map(fetch_single, ids):
             if result:
                 rows.append(result)
                 if len(rows) >= TARGET_COUNT:
@@ -91,6 +88,6 @@ def extract():
 
     print(f"[DONE] Extracted {len(rows)} → {RAW_FILE}")
 
-#entry point
+# entry point
 if __name__ == "__main__":
     extract()

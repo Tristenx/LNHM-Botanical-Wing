@@ -15,8 +15,24 @@ can be created using the terraform script within the terraform directory.
 ## Getting Started
 
 ### Dependencies
+- macOS
+- Access to a RDS running Microsoft SQL Server
+- `brew install sqlcmd`
 
 ### Installing
+- Fork the Github Repository
+- `git clone [URL]`
+
+### Sample env
+```
+DB_HOST=xxxxx
+DB_PORT=xxxxx
+DB_NAME=xxxxx
+DB_SCHEMA=xxxxx
+DB_USERNAME=xxxxx
+DB_PASSWORD=xxxxx
+DB_DRIVER=xxxxx
+```
 
 ### Executing Program
 

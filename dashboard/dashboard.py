@@ -2,7 +2,7 @@
 import streamlit as st
 
 from data import load_all_plants, load_latest_plant_recordings
-from charts import create_bar_chart, create_line_chart
+from charts import create_temp_chart, create_soil_moisture_chart
 
 if __name__ == "__main__":
 
@@ -16,10 +16,10 @@ if __name__ == "__main__":
 
     # Chart only showing data with one entry per plant
 
-    create_bar_chart(latest_plant_recordings, "plant_name",
-                     "temperature", chosen_plants)
+    create_temp_chart(latest_plant_recordings, "plant_name",
+                      "temperature", chosen_plants)
 
     # moisture graph
 
-    create_bar_chart(latest_plant_recordings, "plant_name",
-                     "soil_moisture", chosen_plants)
+    create_soil_moisture_chart(latest_plant_recordings, "plant_name",
+                               "soil_moisture", chosen_plants)

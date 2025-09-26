@@ -30,19 +30,27 @@ def clean_numeric(s):
 
 
 def transform():
-    """Handles all transformation logic for the raw plants data .csv file. """
+    """Handles all transformation logic for the raw plants data .csv file."""
     df = pd.read_csv(RAW_FILE)
 
+    # Clean string columns
     for col in df.select_dtypes("object").columns:
         df[col] = df[col].astype(str).str.strip().replace({"nan": None})
 
+    # Preserve plant name
+    if "name" in df.columns:
+        df.rename(columns={"name": "plant_name"}, inplace=True)
+
+    # Clean numeric and datetime columns
     for col in ["temperature", "soil_moisture", "latitude", "longitude"]:
         df[col] = clean_numeric(df[col])
     for col in ["last_watered", "recording_taken"]:
         df[col] = pd.to_datetime(df[col], errors="coerce", utc=True)
 
+    # Filter invalid readings
     df = df[(df["temperature"] >= 0) & (df["soil_moisture"].between(0, 100))]
 
+    # Normalised dimension tables
     country = (
         df[["origin_country"]]
         .dropna()
@@ -77,17 +85,28 @@ def transform():
     botanist["phone_number"] = botanist["phone_number"].apply(normalise_phone)
     botanist["botanist_id"] = botanist.index + 1
 
+    # Merge safely, drop any extra name columns immediately
     df = (
-        df.merge(country, left_on="origin_country", right_on="name", how="left")
+        df.merge(country, left_on="origin_country", right_on="name", how="left", suffixes=("", "_country"))
           .merge(city, left_on="origin_city", right_on="name", how="left", suffixes=("", "_city"))
-          .merge(botanist[["botanist_id", "email"]],
-                 left_on="botanist_email", right_on="email", how="left")
+          .merge(
+              botanist[["botanist_id", "email"]],
+              left_on="botanist_email",
+              right_on="email",
+              how="left"
+          )
     )
 
+    # Drop the temporary name columns to avoid CSV collisions
+    for col in df.columns:
+        if col.startswith("name") and col not in ["plant_name"]:
+            df.drop(columns=[col], inplace=True)
+
+    # Only plant_name remains
     plant = df[
         [
             "plant_id",
-            "name",
+            "plant_name",
             "scientific_name",
             "latitude",
             "longitude",
@@ -108,6 +127,7 @@ def transform():
     ].copy()
     recording["recording_id"] = recording.index + 1
 
+    # Write outputs
     country.to_csv(OUT_DIR / "country.csv", index=False)
     city.to_csv(OUT_DIR / "city.csv", index=False)
     plant.to_csv(OUT_DIR / "plant.csv", index=False)

@@ -1,0 +1,15 @@
+# Use the official Python image as a base image
+FROM public.ecr.aws/lambda/python:3.9
+
+# Set the working directory to /var/task
+WORKDIR /var/task
+
+# Copy the requirements file and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the Python script into the container
+COPY email_alert.py .
+
+# Set the CMD to the handler file and function
+CMD [ "email_alert.lambda_handler" ]

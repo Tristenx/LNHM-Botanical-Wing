@@ -1,0 +1,5 @@
+pylint
+pytest
+boto3
+pyodbc
+python-dotenv

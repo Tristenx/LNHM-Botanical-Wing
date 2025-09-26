@@ -1,25 +1,28 @@
 # Plant Health Monitor
-This plant monitoring system, developed for the Liverpool Natural History Museum, enables the museum to alert 
+
+This plant monitoring system, developed for the Liverpool Natural History Museum, enables the museum to alert
 gardeners whenever issues arise. Data older than 24 hours is summarized and moved from short-term to long-term storage.
 
 ## Description
-The health of each plant is monitored by a Raspberry Pi which measures various environmental factors that affect 
-plant growth. The data gathered by this hardware is updated every minute and exposed via an API endpoint. This data 
-is processed by a Lambda running an ETL script that runs once every minute. This script extracts, cleans, and loads the 
-recordings into an RDS running Microsoft SQL Server. Once a day at midnight a step function is executed which runs 
-two Lambdas in sequence. The first Lambda is an ETL script which extracts recordings from the RDS and summarizes the 
-records for each plant. This summary data is then loaded into a S3 bucket for long term storage. The second Lambda is 
-a script which resets the SQL Server database which allows us to keep costs down. Both live and historical data can be 
-accessed through the Streamlit dashboard, each on its own dedicated page. On both pages, users can select the plants they 
-are interested in via a multiselect box. Once selected, the dashboard displays two bar charts showing the temperature and 
+
+The health of each plant is monitored by a Raspberry Pi which measures various environmental factors that affect
+plant growth. The data gathered by this hardware is updated every minute and exposed via an API endpoint. This data
+is processed by a Lambda running an ETL script that runs once every minute. This script extracts, cleans, and loads the
+recordings into an RDS running Microsoft SQL Server. Once a day at midnight a step function is executed which runs
+two Lambdas in sequence. The first Lambda is an ETL script which extracts recordings from the RDS and summarizes the
+records for each plant. This summary data is then loaded into a S3 bucket for long term storage. The second Lambda is
+a script which resets the SQL Server database which allows us to keep costs down. Both live and historical data can be
+accessed through the Streamlit dashboard, each on its own dedicated page. On both pages, users can select the plants they
+are interested in via a multiselect box. Once selected, the dashboard displays two bar charts showing the temperature and
 soil moisture levels for the chosen plants. Additionally, a heatmap is available to visualize soil moisture trends over time for each plant.
-The historical data page provides a similar set of graphs, with the added feature of a day multiselect box. This allows users to filter and view 
-data from specific days of interest. Most of the required cloud architecture can be created using the terraform script within the terraform 
+The historical data page provides a similar set of graphs, with the added feature of a day multiselect box. This allows users to filter and view
+data from specific days of interest. Most of the required cloud architecture can be created using the terraform script within the terraform
 directory. Both the [Architecture Diagram](documentation/architecture_diagram.png) and the [ERD](documentation/database_erd.png) can be found within the documentation directory.
 
 ## Getting Started
 
 ### Dependencies
+
 - macOS
 - Docker
 - Terraform
@@ -27,10 +30,12 @@ directory. Both the [Architecture Diagram](documentation/architecture_diagram.pn
 - `brew install sqlcmd`
 
 ### Installing
+
 - Fork the Github Repository
 - `git clone [URL]`
 
 ### Sample env
+
 ```
 DB_HOST=xxxxx
 DB_PORT=xxxxx
@@ -42,6 +47,7 @@ DB_DRIVER=xxxxx
 ```
 
 ### Sample secret.tfvars
+
 ```
 AWS_ACCESS_KEY_ID     = "xxxxx"
 AWS_SECRET_ACCESS_KEY = "xxxxx"
@@ -54,12 +60,15 @@ DB_DRIVER             = "xxxxx"
 ```
 
 ### Executing Program
+
 #### Setup the database
+
 - `cd db_etl_pipeline/`
 - `bash db_setup.sh`
 - `cd ..`
 
 #### Create and push etl-rds container to ECR
+
 - `cd terraform`
 - `terraform apply -target aws_lambda_function.c19-alpha-ecr-rds -var-file="secret.tfvars"`
 - `cd ..`
@@ -72,6 +81,7 @@ DB_DRIVER             = "xxxxx"
 - `cd ../..`
 
 #### Create and push etl-s3 container to ECR
+
 - `cd terraform`
 - `terraform apply -target aws_lambda_function.c19-alpha-ecr-s3 -var-file="secret.tfvars"`
 - `cd ..`
@@ -83,6 +93,7 @@ DB_DRIVER             = "xxxxx"
 - `cd ../..`
 
 #### Create and push destroy container to ECR
+
 - `cd terraform`
 - `terraform apply -target aws_lambda_function.c19-alpha-ecr-destroy -var-file="secret.tfvars"`
 - `cd ..`
@@ -94,6 +105,7 @@ DB_DRIVER             = "xxxxx"
 - `cd ../../..`
 
 #### Create and push dashboard container to ECR
+
 - `cd terraform`
 - `terraform apply -target aws_lambda_function.c19-alpha-ecr-dashboard -var-file="secret.tfvars"`
 - `cd ..`
@@ -105,18 +117,20 @@ DB_DRIVER             = "xxxxx"
 - `cd ..`
 
 #### Create AWS resources with terraform
+
 - `cd terraform`
 - `terraform init`
 - `terraform apply`
 
 #### Setup final AWS resources
+
 - Setup an EventBridge schedule that runs the API ETL script every minute.
 - Setup a Step Function which first runs the RDS ETL then the clear database script.
 - Setup an EventBridge schedule that runs the Step Function once a day at midnight.
 
-
 ## Authors
+
 - cameronriley0 (Project Manager)
-- Zephvv (Quality Assurance)
+- Zephvv (Architect)
 - DemoyDW (Quality Assurance)
 - Tristenx (Architect)

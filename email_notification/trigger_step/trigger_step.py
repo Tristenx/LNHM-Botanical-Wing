@@ -38,6 +38,7 @@ def get_recordings(conn: pyodbc.Connection, lower_time: datetime):
 
 
 def trigger_step_function(emergency_details: dict[str:str]) -> None:
+    """Triggers the AWS step function to send an email with emergency details."""
     sf = boto3.client('stepfunctions', region_name='eu-west-2')
     sf.start_execution(
         stateMachineArn='arn:aws:states:eu-west-2:129033205317:stateMachine:c19-alpha-email-notification',
@@ -66,6 +67,7 @@ def check_plant_health(recordings: list[tuple]) -> None:
 
 
 def handler(event=None, context=None) -> dict[str:str]:
+    """Handler function for Lambda to trigger a step function if theres an emergency."""
     db_conn = get_connection()
     relevant_time = datetime.now() - timedelta(hours=1, minutes=1)
     records = get_recordings(db_conn, relevant_time)

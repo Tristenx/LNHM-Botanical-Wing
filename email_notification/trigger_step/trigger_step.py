@@ -27,6 +27,7 @@ def query_database(conn: pyodbc.Connection, sql: str) -> list[list]:
 
 
 def get_recordings(conn: pyodbc.Connection, lower_time: datetime):
+    """Returns recordings that are greater than a lower bound time."""
     query = f"SELECT * FROM alpha.recording;"
     result = query_database(conn, query)
     relevant_records = []
@@ -36,12 +37,27 @@ def get_recordings(conn: pyodbc.Connection, lower_time: datetime):
     return relevant_records
 
 
+def good_moisture_level(moisture: float) -> bool:
+    """Checks if the moisture level is acceptable for a recording."""
+    if moisture > 10:
+        return True
+    return False
+
+
+def check_plant_health(recordings: list[tuple]) -> None:
+    """Performs health checks on the each of the recordings."""
+    for record in recordings:
+        if not good_moisture_level(record[5]):
+            print("BAD")
+
+
 if __name__ == "__main__":
     load_dotenv()
 
     db_conn = get_connection()
     relevant_time = datetime.now() - timedelta(hours=1, minutes=1)
     records = get_recordings(db_conn, relevant_time)
+    check_plant_health(records)
 
     # sf = boto3.client('stepfunctions', region_name='eu-west-2')
     # input_dict = {'plant': 'name',

@@ -51,7 +51,7 @@ def trigger_step_function(emergency_details: dict[str:str]) -> None:
 
 def good_moisture_level(moisture: float) -> bool:
     """Checks if the moisture level is acceptable for a recording."""
-    if moisture > 25:
+    if moisture > 10:
         return True
     return False
 

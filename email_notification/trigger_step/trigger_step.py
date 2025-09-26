@@ -44,7 +44,7 @@ def trigger_step_function(emergency_details: dict[str:str]) -> None:
                   'botanist': 'name',
                   'email': 'email',
                   'phone': 'phone'}
-    response = sf.start_execution(
+    sf.start_execution(
         stateMachineArn='arn:aws:states:eu-west-2:129033205317:stateMachine:c19-alpha-email-notification',
         input=json.dumps(emergency_details))
 
@@ -62,12 +62,16 @@ def check_plant_health(recordings: list[tuple]) -> None:
         if not good_moisture_level(record[5]):
             print("BAD")
             details = dict()
-            trigger_step_function()
+            details["plant"] = record[1]
+            details["emergency_type"] = f"Moisture Level: {record[5]}"
+            details["botanist"] = record[2]
+            details["email"] = "testing@test.com"
+            details["phone"] = "999"
+            trigger_step_function(details)
 
 
 if __name__ == "__main__":
     load_dotenv()
-
     db_conn = get_connection()
     relevant_time = datetime.now() - timedelta(hours=1, minutes=1)
     records = get_recordings(db_conn, relevant_time)

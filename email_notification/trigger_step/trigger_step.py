@@ -39,11 +39,6 @@ def get_recordings(conn: pyodbc.Connection, lower_time: datetime):
 
 def trigger_step_function(emergency_details: dict[str:str]) -> None:
     sf = boto3.client('stepfunctions', region_name='eu-west-2')
-    input_dict = {'plant': 'name',
-                  'emergency_type': 'type',
-                  'botanist': 'name',
-                  'email': 'email',
-                  'phone': 'phone'}
     sf.start_execution(
         stateMachineArn='arn:aws:states:eu-west-2:129033205317:stateMachine:c19-alpha-email-notification',
         input=json.dumps(emergency_details))
@@ -51,7 +46,7 @@ def trigger_step_function(emergency_details: dict[str:str]) -> None:
 
 def good_moisture_level(moisture: float) -> bool:
     """Checks if the moisture level is acceptable for a recording."""
-    if moisture > 10:
+    if moisture > 25:
         return True
     return False
 
@@ -70,9 +65,16 @@ def check_plant_health(recordings: list[tuple]) -> None:
             trigger_step_function(details)
 
 
-if __name__ == "__main__":
-    load_dotenv()
+def handler(event=None, context=None) -> dict[str:str]:
     db_conn = get_connection()
     relevant_time = datetime.now() - timedelta(hours=1, minutes=1)
     records = get_recordings(db_conn, relevant_time)
     check_plant_health(records)
+    return {
+        "message": "Triggered"
+    }
+
+
+if __name__ == "__main__":
+    load_dotenv()
+    handler()

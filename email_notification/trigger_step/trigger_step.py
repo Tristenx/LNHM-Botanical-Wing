@@ -1,5 +1,6 @@
 """Checks the RDS and if there is an emergency triggers the email step function."""
 
+from datetime import datetime, timedelta
 from os import environ
 import json
 
@@ -25,14 +26,22 @@ def query_database(conn: pyodbc.Connection, sql: str) -> list[list]:
     return result
 
 
-def get_recordings():
-    pass
+def get_recordings(conn: pyodbc.Connection, lower_time: datetime):
+    query = f"SELECT * FROM alpha.recording;"
+    result = query_database(conn, query)
+    relevant_records = []
+    for record in result:
+        if record[6] > lower_time:
+            relevant_records.append(record)
+    return relevant_records
 
 
 if __name__ == "__main__":
     load_dotenv()
 
     db_conn = get_connection()
+    relevant_time = datetime.now() - timedelta(hours=1, minutes=1)
+    records = get_recordings(db_conn, relevant_time)
 
     # sf = boto3.client('stepfunctions', region_name='eu-west-2')
     # input_dict = {'plant': 'name',

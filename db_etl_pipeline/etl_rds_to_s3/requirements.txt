@@ -4,3 +4,4 @@ pyodbc
 python-dotenv
 pandas
 boto3
+awswrangler

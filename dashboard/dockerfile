@@ -1,0 +1,31 @@
+#Base image of python
+FROM python:latest
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    gnupg \
+    unixodbc-dev && \
+    curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg && \
+    curl https://packages.microsoft.com/config/debian/11/prod.list | tee /etc/apt/sources.list.d/mssql-release.list && \
+    apt-get update && \
+    ACCEPT_EULA=Y apt-get install -y --no-install-recommends msodbcsql18
+
+#Set the default directory
+WORKDIR dashboard
+
+#Copy over requirements
+COPY requirements.txt .
+
+#Install all requirements on the container
+RUN pip install -r requirements.txt
+
+#Copy over dashboard files
+COPY charts.py .
+
+COPY data.py .
+
+COPY dashboard.py .
+
+#Run the dashboard
+CMD streamlit run dashboard.py

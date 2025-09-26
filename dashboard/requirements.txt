@@ -1,0 +1,6 @@
+pandas 
+streamlit
+python-dotenv
+altair 
+boto3
+pyodbc

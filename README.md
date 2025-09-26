@@ -9,9 +9,13 @@ is processed by a Lambda running an ETL script that runs once every minute. This
 recordings into an RDS running Microsoft SQL Server. Once a day at midnight a step function is executed which runs 
 two Lambdas in sequence. The first Lambda is an ETL script which extracts recordings from the RDS and summarizes the 
 records for each plant. This summary data is then loaded into a S3 bucket for long term storage. The second Lambda is 
-a script which resets the SQL Server database which allows us to keep costs down. Most of the required cloud architecture 
-can be created using the terraform script within the terraform directory. Both the [Architecture Diagram](documentation/architecture_diagram.png) 
-and the [ERD](documentation/database_erd.png) can be found within the documentation directory.
+a script which resets the SQL Server database which allows us to keep costs down. Both live and historical data can be 
+accessed through the Streamlit dashboard, each on its own dedicated page. On both pages, users can select the plants they 
+are interested in via a multiselect box. Once selected, the dashboard displays two bar charts showing the temperature and 
+soil moisture levels for the chosen plants. Additionally, a heatmap is available to visualize soil moisture trends over time for each plant.
+The historical data page provides a similar set of graphs, with the added feature of a day multiselect box. This allows users to filter and view 
+data from specific days of interest. Most of the required cloud architecture can be created using the terraform script within the terraform 
+directory. Both the [Architecture Diagram](documentation/architecture_diagram.png) and the [ERD](documentation/database_erd.png) can be found within the documentation directory.
 
 ## Getting Started
 
@@ -88,6 +92,17 @@ DB_DRIVER             = "xxxxx"
 - `docker tag YOUR_IMAGE_NAME:latest YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/YOUR_REPOSITORY_NAME:latest`
 - `docker push YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/YOUR_REPOSITORY_NAME:latest`
 - `cd ../../..`
+
+#### Create and push dashboard container to ECR
+- `cd terraform`
+- `terraform apply -target aws_lambda_function.c19-alpha-ecr-dashboard -var-file="secret.tfvars"`
+- `cd ..`
+- `cd dashboard`
+- `aws ecr get-login-password --region YOUR_AWS_REGION | docker login --username AWS --password-stdin YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com`
+- `docker buildx build . -t APP_NAME:latest --platform "Linux/amd64"`
+- `docker tag YOUR_IMAGE_NAME:latest YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/YOUR_REPOSITORY_NAME:latest`
+- `docker push YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/YOUR_REPOSITORY_NAME:latest`
+- `cd ..`
 
 #### Create AWS resources with terraform
 - `cd terraform`

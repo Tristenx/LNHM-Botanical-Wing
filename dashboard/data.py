@@ -62,6 +62,7 @@ def load_all_plants(df: pd.DataFrame):
     return df['plant_name'].unique()
 
 
+@st.cache_data
 def live_heatmap_data():
     """Gets the data for the live page heatmap."""
     df = load_all_plant_recording_data()
@@ -71,3 +72,27 @@ def live_heatmap_data():
 
     heatmap_df = df[["plant_id", "soil_moisture", "hour", "time"]]
     return heatmap_df
+
+
+@st.cache_data
+def get_low_soil_moisture_plants():
+    """Gets the plants with soil moistures below 20%."""
+    df = load_latest_plant_recordings()
+    low_moisture_plants = df[df["soil_moisture"] < 20].sort_values(
+        "soil_moisture", ascending=True)
+    return low_moisture_plants
+
+
+@st.cache_data
+def get_low_temperature_plants():
+    """Gets the plants with temperatures below 5°C."""
+    df = load_latest_plant_recordings()
+    low_temp_plants = df[df["temperature"] <= 5].sort_values(
+        "temperature", ascending=True)
+    return low_temp_plants
+
+
+df = load_latest_plant_recordings()
+low_moisture_plants = df[df["soil_moisture"] < 20].sort_values(
+    "soil_moisture", ascending=True)
+print(low_moisture_plants)

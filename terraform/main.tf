@@ -76,9 +76,16 @@ resource "aws_iam_role_policy" "c19_alpha_lambda_to_s3_policy" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Action   = "s3:PutObject"
-      Effect   = "Allow"
-      Resource = "arn:aws:s3:::c19-alpha-s3-bucket/*"
+      Action = [
+        "s3:PutObject",
+        "s3:ListBucket",
+        "s3:DeleteObject"
+      ]
+      Effect = "Allow"
+      Resource = [
+        "arn:aws:s3:::c19-alpha-s3-bucket",
+        "arn:aws:s3:::c19-alpha-s3-bucket/*"
+      ]
     }]
   })
 }
@@ -177,7 +184,7 @@ resource "aws_iam_role_policy" "glue_crawler_s3_access" {
       Effect = "Allow",
       Action = [
         "s3:GetObject",
-        "s3:ListBucket"
+        "s3:ListBucket",
       ],
       Resource = [
         "arn:aws:s3:::c19-alpha-s3-bucket",
@@ -196,10 +203,18 @@ resource "aws_glue_crawler" "c19_alpha_glue_crawler" {
   database_name = aws_glue_catalog_database.c19_alpha_glue_catalog_db.name
   name          = "c19_alpha_glue_crawler"
   role          = aws_iam_role.c19_alpha_glue_crawler_role.arn
+  schedule      = "cron(10 0 * * ? *)"
 
   s3_target {
     path = "s3://${aws_s3_bucket.c19-alpha-s3-bucket.bucket}"
   }
+
+  configuration = jsonencode(
+    {
+      CreatePartitionIndex = true
+      Version              = 1
+    }
+  )
 }
 
 # ECS
@@ -300,9 +315,30 @@ resource "aws_ecs_service" "c19_alpha_ecs_service" {
   cluster         = "arn:aws:ecs:eu-west-2:129033205317:cluster/c19-ecs-cluster"
   task_definition = aws_ecs_task_definition.c19_alpha_ecs_task_definition.arn
   desired_count   = "1"
+
   network_configuration {
     subnets          = ["subnet-00506a8db091bdf2a"]
     security_groups  = [aws_security_group.c19_alpha_ecs_sg.id]
     assign_public_ip = true
+  }
+
+  capacity_provider_strategy {
+    capacity_provider = "FARGATE"
+    weight            = 100
+    base              = 1
+  }
+
+  deployment_circuit_breaker {
+    enable   = false
+    rollback = false
+  }
+
+  deployment_configuration {
+    bake_time_in_minutes = "0"
+    strategy             = "ROLLING"
+  }
+
+  deployment_controller {
+    type = "ECS"
   }
 }

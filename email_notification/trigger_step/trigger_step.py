@@ -69,7 +69,7 @@ def check_plant_health(recordings: list[tuple]) -> None:
 def handler(event=None, context=None) -> dict[str:str]:
     """Handler function for Lambda to trigger a step function if theres an emergency."""
     db_conn = get_connection()
-    relevant_time = datetime.now() - timedelta(hours=1, minutes=1)
+    relevant_time = datetime.now() - timedelta(hours=1, minutes=2)
     records = get_recordings(db_conn, relevant_time)
     check_plant_health(records)
     return {

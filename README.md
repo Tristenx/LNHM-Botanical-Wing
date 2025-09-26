@@ -93,6 +93,17 @@ DB_DRIVER             = "xxxxx"
 - `docker push YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/YOUR_REPOSITORY_NAME:latest`
 - `cd ../../..`
 
+#### Create and push dashboard container to ECR
+- `cd terraform`
+- `terraform apply -target aws_lambda_function.c19-alpha-ecr-dashboard -var-file="secret.tfvars"`
+- `cd ..`
+- `cd dashboard`
+- `aws ecr get-login-password --region YOUR_AWS_REGION | docker login --username AWS --password-stdin YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com`
+- `docker buildx build . -t APP_NAME:latest --platform "Linux/amd64"`
+- `docker tag YOUR_IMAGE_NAME:latest YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/YOUR_REPOSITORY_NAME:latest`
+- `docker push YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/YOUR_REPOSITORY_NAME:latest`
+- `cd ..`
+
 #### Create AWS resources with terraform
 - `cd terraform`
 - `terraform init`

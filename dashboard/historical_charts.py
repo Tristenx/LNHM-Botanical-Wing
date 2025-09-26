@@ -14,13 +14,13 @@ def create_temp_chart(df: pd.DataFrame, x_axis: str, y_axis: str, chosen: list[s
     if dates:
         df = df[df["date"].isin(dates)]
 
-    st.altair_chart(alt.Chart(df).mark_bar().encode(
+    return alt.Chart(df).mark_bar().encode(
         x=alt.X(x_axis, sort="-y", title="Plant Name",
                 axis=alt.Axis(labelAngle=80)),
         y=alt.Y(f"mean({y_axis}):Q", title="Average Temperature (°C)"),
         color=alt.Color("plant_name", title="Plant Name",
                         scale=alt.Scale(scheme='purplebluegreen'))
-    ).properties(title="Average Temperature of Each Plant", width=400))
+    ).properties(title="Average Temperature of Each Plant", width=400)
 
 
 @st.cache_data
@@ -32,13 +32,13 @@ def create_soil_moisture_chart(df: pd.DataFrame, x_axis: str, y_axis: str, chose
     if dates:
         df = df[df["date"].isin(dates)]
 
-    st.altair_chart(alt.Chart(df).mark_bar().encode(
+    return alt.Chart(df).mark_bar().encode(
         x=alt.X(x_axis, sort="-y", title="Plant Name",
                 axis=alt.Axis(labelAngle=80)),
         y=alt.Y(f"mean({y_axis}):Q", title="Average Soil Moisture (%)"),
         color=alt.Color("plant_name", title="Plant Name",
                         scale=alt.Scale(scheme='purplebluegreen'))
-    ).properties(title="Average Soil Moisture of Each Plant", width=400))
+    ).properties(title="Average Soil Moisture of Each Plant", width=400)
 
 
 @st.cache_data
@@ -48,16 +48,16 @@ def create_at_risk_chart_for_moisture(df: pd.DataFrame, x_axis: str, y_axis: str
     if dates:
         df = df[df["date"].isin(dates)]
 
-    df = df.groupby('plant_name')['avg_soil_moisture'].mean(
-    ).reset_index().sort_values(by='avg_soil_moisture').head(5)
+    df = df.groupby(x_axis)[y_axis].mean(
+    ).reset_index().sort_values(by=y_axis).head(5)
 
-    st.altair_chart(alt.Chart(df).mark_bar().encode(
+    return alt.Chart(df).mark_bar().encode(
         x=alt.X(x_axis, sort="-y", title="Plant Name",
                 axis=alt.Axis(labelAngle=80)),
         y=alt.Y(f"mean({y_axis}):Q", title="Lowest Average Soil Moisture"),
         color=alt.Color("plant_name", title="Plant Name",
                         scale=alt.Scale(scheme='purplebluegreen'))
-    ))
+    ).properties(title='Top 5 Lowest Soil Moisture', height=400, width=400)
 
 
 @st.cache_data
@@ -67,13 +67,13 @@ def create_at_risk_chart_for_temperature(df: pd.DataFrame, x_axis: str, y_axis: 
     if dates:
         df = df[df["date"].isin(dates)]
 
-    df = df.groupby('plant_name')['avg_temperature'].mean(
-    ).reset_index().sort_values(by='avg_temperature').head(5)
+    df = df.groupby(x_axis)[y_axis].mean(
+    ).reset_index().sort_values(by=y_axis).head(5)
 
-    st.altair_chart(alt.Chart(df).mark_bar().encode(
+    return alt.Chart(df).mark_bar().encode(
         x=alt.X(x_axis, sort="-y", title="Plant Name",
                 axis=alt.Axis(labelAngle=80)),
         y=alt.Y(f"mean({y_axis}):Q", title="Lowest Average Temperature"),
         color=alt.Color("plant_name", title="Plant Name",
                         scale=alt.Scale(scheme='purplebluegreen'))
-    ))
+    ).properties(title='Top 5 Lowest Temperature', height=400, width=400)

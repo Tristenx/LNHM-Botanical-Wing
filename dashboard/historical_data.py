@@ -10,7 +10,7 @@ import awswrangler as wr
 @st.cache_data()
 def load_historical_plant_data() -> pd.DataFrame:
     """Loads the historical data stored in the s3 bucket."""
-
+    create_boto3_client()
     return wr.athena.read_sql_table(
         table='c19_alpha_s3_bucket', database='c19_alpha_glue_catalog_db'
     )
@@ -46,3 +46,12 @@ def calculate_most_at_risk_plant_by_temperature(df: pd.DataFrame, dates: list):
     ).reset_index().sort_values(by='avg_temperature').head(1)
 
     return df.iloc[0]
+
+
+@st.cache_resource
+def create_boto3_client() -> boto3.session:
+    """Creates a boto3 session to connect to aws"""
+
+    return boto3.client('athena',
+                        region_name="eu-west-2"
+                        )

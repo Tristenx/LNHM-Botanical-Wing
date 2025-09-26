@@ -27,5 +27,11 @@ COPY data.py .
 
 COPY dashboard.py .
 
+COPY historical_charts.py .
+
+COPY historical_data.py .
+
+COPY pages ./pages
+
 #Run the dashboard
 CMD streamlit run dashboard.py

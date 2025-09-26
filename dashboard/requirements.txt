@@ -4,3 +4,4 @@ python-dotenv
 altair 
 boto3
 pyodbc
+awswrangler

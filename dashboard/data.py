@@ -90,9 +90,3 @@ def get_low_temperature_plants():
     low_temp_plants = df[df["temperature"] <= 5].sort_values(
         "temperature", ascending=True)
     return low_temp_plants
-
-
-df = load_latest_plant_recordings()
-low_moisture_plants = df[df["soil_moisture"] < 20].sort_values(
-    "soil_moisture", ascending=True)
-print(low_moisture_plants)

@@ -33,8 +33,12 @@ TABLES = [
     ("recording.csv", "recording", "id"),  # id will autoincrement
 ]
 
-# CSV column → DB column renames
+# CSV column → DB column renames (to match schema.sql)
 COLUMN_MAPS = {
+    # Country & city stay as 'name'
+    "plant": {
+        "plant_name": "name"
+    },
     "botanist": {
         "name": "botanist_name",
         "phone_number": "phone"
@@ -70,7 +74,7 @@ def load():
 
             df = pd.read_csv(file_path)
 
-            # rename columns if needed
+            # Rename columns to match DB schema if needed
             if table in COLUMN_MAPS:
                 df.rename(columns=COLUMN_MAPS[table], inplace=True)
 
@@ -78,7 +82,7 @@ def load():
             if table == "recording" and "id" in df.columns:
                 df = df.drop(columns=["id"])
 
-            # fetch existing primary keys to avoid duplicates (except recording)
+            # Skip rows whose PK already exists (except recording)
             if table != "recording" and pk_col in df.columns:
                 existing_keys = set()
                 query = text(f"SELECT {pk_col} FROM {DB_SCHEMA}.{table}")
@@ -96,20 +100,25 @@ def load():
                 continue
 
             print(f"[LOAD] Inserting {len(df)} rows into {DB_SCHEMA}.{table}…")
-            df.to_sql(
-                name=table,
-                con=conn,
-                schema=DB_SCHEMA,
-                if_exists="append",
-                index=False,
-                chunksize=1000,
-                method="multi"
-            )
+            try:
+                df.to_sql(
+                    name=table,
+                    con=conn,
+                    schema=DB_SCHEMA,
+                    if_exists="append",
+                    index=False,
+                    chunksize=1000,
+                    method="multi"
+                )
+            except Exception as exc:
+                raise RuntimeError(f"Failed to insert into {DB_SCHEMA}.{table}: {exc}") from exc
 
         print("[LOAD] All tables loaded successfully.")
+
 
 if __name__ == "__main__":
     try:
         load()
     except RuntimeError as exc:
         print(f"[ERROR] Load failed: {exc}")
+        raise

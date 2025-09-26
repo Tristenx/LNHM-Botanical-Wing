@@ -53,9 +53,21 @@ def format_plant_recording_data(data: list[tuple]) -> pd.DataFrame:
         record["recording_taken"] = recording[6]
         record["plant_name"] = recording[7]
         records.append(record)
+
     return pd.DataFrame(records)
 
 
 @st.cache_data
 def load_all_plants(df: pd.DataFrame):
     return df['plant_name'].unique()
+
+
+def live_heatmap_data():
+    """Gets the data for the live page heatmap."""
+    df = load_all_plant_recording_data()
+    df["hour"] = pd.to_datetime(df["recording_taken"]).dt.hour
+    df["time"] = pd.to_datetime(df["recording_taken"]).dt.strftime("%H:%M")
+    df["soil_moisture"] = pd.to_numeric(df["soil_moisture"])
+
+    heatmap_df = df[["plant_id", "soil_moisture", "hour", "time"]]
+    return heatmap_df
